@@ -1,4 +1,4 @@
-import type { Meeting, UpcomingMeeting } from "@/lib/types";
+import type { ActionItem, Meeting } from "@/lib/types";
 import { acmeProductDemo } from "./meetings/acme-product-demo";
 import { northwindCsReview } from "./meetings/northwind-cs-review";
 import { globexEnterpriseCall } from "./meetings/globex-enterprise-call";
@@ -24,49 +24,57 @@ export function getMeeting(id: string): Meeting | undefined {
   return meetings.find((m) => m.id === id);
 }
 
-/** Calendar stub: no real calendar integration, so upcoming calls are fixed. */
-export const upcomingMeetings: UpcomingMeeting[] = [
-  {
-    id: "up-acme-cto",
-    title: "Acme CTO Technical Deep-dive",
-    company: "Acme Corporation",
-    type: "sales",
-    date: "2026-09-29T10:00:00-07:00",
-    duration: 45,
-    platform: "Zoom",
-    attendees: ["Sarah Chen", "Priya Nair", "Michael Johnson"],
-  },
-  {
-    id: "up-globex-cfo",
-    title: "Globex CFO Business Case Review",
-    company: "Globex Industries",
-    type: "sales",
-    date: "2026-09-30T13:30:00-07:00",
-    duration: 30,
-    platform: "Microsoft Teams",
-    attendees: ["Marcus Webb", "Sarah Chen", "Karen Whitfield"],
-  },
-  {
-    id: "up-migration-rehearsal",
-    title: "Postgres Migration Rehearsal",
-    company: "Lattice Labs",
-    type: "engineering",
-    date: "2026-10-01T09:00:00-07:00",
-    duration: 60,
-    platform: "Google Meet",
-    attendees: ["Arslan", "Ghulam Mustafa", "Abdullah Javed"],
-  },
-];
+/**
+ * "Today" for the demo workspace. Pages are statically rendered, so relative
+ * figures (this week, overdue) are anchored to the seed data's timeline rather
+ * than the viewer's clock, which keeps them stable and identical on server and client.
+ */
+export const DEMO_TODAY = new Date("2026-09-25T12:00:00-07:00");
+
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/** Parses short due dates like "Sep 28" / "Sept 28" in the demo year. */
+export function parseDue(due?: string | null): Date | null {
+  const m = due?.toLowerCase().match(/([a-z]{3})[a-z]*\.?\s+(\d{1,2})/);
+  if (!m) return null;
+  const month = MONTHS.indexOf(m[1]);
+  if (month === -1) return null;
+  return new Date(Date.UTC(DEMO_TODAY.getUTCFullYear(), month, Number(m[2]), 23, 59));
+}
+
+export function isOverdue(item: { dueDate?: string | null; status: string }): boolean {
+  const due = parseDue(item.dueDate);
+  return item.status === "pending" && !!due && due.getTime() < DEMO_TODAY.getTime() - 12 * 3600 * 1000;
+}
 
 export function getStats(list: Meeting[] = meetings) {
-  const totalMinutes = list.reduce((sum, m) => sum + m.duration, 0);
+  const weekAgo = DEMO_TODAY.getTime() - 7 * 24 * 3600 * 1000;
   const actionItems = list.flatMap((m) => m.summary.action_items);
+  const people = new Set(list.flatMap((m) => m.participants.map((p) => p.name)));
   return {
     totalMeetings: list.length,
-    totalMinutes,
-    avgDuration: list.length ? Math.round(totalMinutes / list.length) : 0,
+    meetingsThisWeek: list.filter((m) => new Date(m.date).getTime() >= weekAgo).length,
     decisions: list.reduce((sum, m) => sum + m.summary.decisions.length, 0),
     actionItems: actionItems.length,
     openActionItems: actionItems.filter((a) => a.status === "pending").length,
+    overdue: actionItems.filter(isOverdue).length,
+    participants: people.size,
   };
+}
+
+export interface OpenActionRow extends ActionItem {
+  key: string;
+  meeting: Pick<Meeting, "id" | "title">;
+}
+
+/** Pending action items across the library, soonest due first. */
+export function openActionRows(list: Meeting[] = meetings, limit = 8): OpenActionRow[] {
+  return list
+    .flatMap((m) =>
+      m.summary.action_items
+        .map((a, i) => ({ ...a, key: `${m.id}-${i}`, meeting: { id: m.id, title: m.title } }))
+        .filter((a) => a.status === "pending"),
+    )
+    .sort((a, b) => (parseDue(a.dueDate)?.getTime() ?? Infinity) - (parseDue(b.dueDate)?.getTime() ?? Infinity))
+    .slice(0, limit);
 }

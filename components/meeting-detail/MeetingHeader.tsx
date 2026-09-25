@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Building2, CalendarDays, Check, ChevronLeft, Clock, Link2, Video } from "lucide-react";
+import { Check, ChevronLeft, Link2 } from "lucide-react";
 import type { Meeting } from "@/lib/types";
 import { formatDate, formatDuration, formatTime } from "@/lib/utils/format";
-import { Avatar } from "@/components/common/Avatar";
+import { btn, size } from "@/lib/ui";
+import { cn } from "@/lib/utils/cn";
 import { TypeBadge } from "@/components/common/TypeBadge";
 
 export function MeetingHeader({ meeting }: { meeting: Meeting }) {
@@ -23,67 +24,30 @@ export function MeetingHeader({ meeting }: { meeting: Meeting }) {
 
   return (
     <header>
-      <Link
-        href="/meetings"
-        className="-ml-2 inline-flex h-9 items-center gap-1 rounded-md px-2 text-sm text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
-      >
-        <ChevronLeft className="h-4 w-4" /> Meetings
+      <Link href="/meetings" className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded text-body text-muted transition-colors duration-150 hover:text-ink">
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" /> All meetings
       </Link>
-
-      <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mt-2 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <TypeBadge type={meeting.type} />
-            <span className="inline-flex items-center gap-1 text-xs text-muted">
-              <Video className="h-3.5 w-3.5" /> Recorded on {meeting.platform}
+          <h1 className="text-h2">{meeting.title}</h1>
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-label text-muted">
+            <span className="font-medium text-copy">{meeting.company}</span>
+            <span aria-hidden="true">·</span>
+            <span>
+              {formatDate(meeting.date)}, {formatTime(meeting.date)} PT
             </span>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px] sm:leading-tight">{meeting.title}</h1>
-          <dl className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
-            <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Company</dt>
-              <Building2 className="h-4 w-4 text-subtle" />
-              <dd className="font-medium text-foreground">{meeting.company}</dd>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Date</dt>
-              <CalendarDays className="h-4 w-4 text-subtle" />
-              <dd>
-                {formatDate(meeting.date)} · {formatTime(meeting.date)} PT
-              </dd>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Duration</dt>
-              <Clock className="h-4 w-4 text-subtle" />
-              <dd>{formatDuration(meeting.duration)}</dd>
-            </div>
-          </dl>
+            <span aria-hidden="true">·</span>
+            <span>{formatDuration(meeting.duration)}</span>
+            <span aria-hidden="true">·</span>
+            <span>{meeting.platform}</span>
+            <TypeBadge type={meeting.type} className="ml-1" />
+          </p>
         </div>
-
-        <button
-          type="button"
-          onClick={copyLink}
-          className="inline-flex h-10 shrink-0 items-center gap-2 self-start rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-foreground transition-colors hover:border-border-strong hover:bg-surface-muted/60"
-        >
-          {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Link2 className="h-4 w-4" />}
-          {copied ? "Link copied" : "Copy link"}
+        <button type="button" onClick={copyLink} className={cn(btn.secondary, size.sm, "shrink-0")} aria-label="Copy link to this meeting">
+          {copied ? <Check className="h-4 w-4 text-success" aria-hidden="true" /> : <Link2 className="h-4 w-4" aria-hidden="true" />}
+          <span className="hidden sm:inline">{copied ? "Link copied" : "Copy link"}</span>
         </button>
       </div>
-
-      <ul className="mt-5 flex flex-wrap gap-2" aria-label="Participants">
-        {meeting.participants.map((p) => (
-          <li
-            key={p.name}
-            className="flex items-center gap-2 rounded-full border border-border bg-surface py-1 pl-1 pr-3"
-            title={p.email}
-          >
-            <Avatar name={p.name} size="xs" />
-            <span className="text-sm font-medium text-foreground">{p.name}</span>
-            {p.role && <span className="hidden text-xs text-muted sm:inline">{p.role}</span>}
-            {p.external && <span className="rounded bg-surface-muted px-1.5 text-[10px] font-medium uppercase tracking-wide text-muted">Guest</span>}
-          </li>
-        ))}
-      </ul>
     </header>
   );
 }

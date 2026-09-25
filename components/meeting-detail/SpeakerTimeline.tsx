@@ -2,78 +2,99 @@
 
 import { useMemo } from "react";
 import type { Meeting } from "@/lib/types";
-import { formatTimestamp } from "@/lib/utils/format";
+import { initials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 
-const SPEAKER_COLORS = ["bg-blue-500", "bg-amber-400", "bg-emerald-500", "bg-rose-400", "bg-teal-500", "bg-slate-500", "bg-orange-400"];
+// Shades of the one accent, darkest for whoever spoke most.
+const SHADES = [
+  "bg-[#0f766e] text-white",
+  "bg-[#0d9488] text-white",
+  "bg-[#5eead4] text-ink",
+  "bg-[#99f6e4] text-ink",
+  "bg-[#ccfbf1] text-ink",
+  "bg-[#e5e7eb] text-ink",
+];
+
+export function speakerShare(meeting: Meeting) {
+  const t = meeting.transcript;
+  const total = meeting.duration * 60;
+  const bySpeaker = new Map<string, number>();
+  t.forEach((e, i) => {
+    const end = i + 1 < t.length ? t[i + 1].timestamp : Math.min(total, e.timestamp + 45);
+    bySpeaker.set(e.speaker, (bySpeaker.get(e.speaker) ?? 0) + Math.max(1, end - e.timestamp));
+  });
+  const sum = [...bySpeaker.values()].reduce((a, b) => a + b, 0) || 1;
+  return meeting.participants
+    .map((p) => ({ name: p.name, role: p.role, pct: Math.round(((bySpeaker.get(p.name) ?? 0) / sum) * 100) }))
+    .sort((a, b) => b.pct - a.pct);
+}
 
 /**
- * Who spoke when, across the whole call. Each segment runs from a transcript
- * entry to the next one; clicking a segment jumps the transcript there.
+ * Talk-time distribution: one box per speaker sized by share of the call.
+ * Hovering (or focusing) a speaker highlights their lines in the transcript;
+ * clicking pins the highlight.
  */
 export function SpeakerTimeline({
   meeting,
-  activeTimestamp,
-  onSeek,
+  focused,
+  onFocus,
+  pinned,
+  onPin,
 }: {
   meeting: Meeting;
-  activeTimestamp: number | null;
-  onSeek: (t: number) => void;
+  focused: string | null;
+  onFocus: (name: string | null) => void;
+  pinned: string | null;
+  onPin: (name: string | null) => void;
 }) {
-  const total = meeting.duration * 60;
-  // Colour by participant order so speakers in one meeting never share a colour.
-  const colorOf = useMemo(() => {
-    const map = new Map(meeting.participants.map((p, i) => [p.name, SPEAKER_COLORS[i % SPEAKER_COLORS.length]]));
-    return (name: string) => map.get(name) ?? "bg-slate-300";
-  }, [meeting.participants]);
-
-  const { segments, talk } = useMemo(() => {
-    const t = meeting.transcript;
-    const segs = t.map((e, i) => {
-      const end = i + 1 < t.length ? t[i + 1].timestamp : Math.min(total, e.timestamp + 45);
-      return { ...e, start: e.timestamp, end: Math.max(end, e.timestamp + 1) };
-    });
-    const bySpeaker = new Map<string, number>();
-    for (const s of segs) bySpeaker.set(s.speaker, (bySpeaker.get(s.speaker) ?? 0) + (s.end - s.start));
-    const sum = [...bySpeaker.values()].reduce((a, b) => a + b, 0) || 1;
-    const talkTime = meeting.participants
-      .map((p) => ({ name: p.name, pct: Math.round(((bySpeaker.get(p.name) ?? 0) / sum) * 100) }))
-      .sort((a, b) => b.pct - a.pct);
-    return { segments: segs, talk: talkTime };
-  }, [meeting, total]);
+  const share = useMemo(() => speakerShare(meeting), [meeting]);
 
   return (
-    <section aria-label="Conversation timeline" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Conversation timeline</h2>
-        <span className="font-mono text-xs tabular-nums text-muted">{formatTimestamp(total)}</span>
+    <section aria-labelledby="talk-heading">
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 id="talk-heading" className="text-label font-medium text-muted">
+          Talk time
+        </h2>
+        {pinned && (
+          <button type="button" onClick={() => onPin(null)} className="text-label text-accent-ink hover:underline">
+            Clear highlight
+          </button>
+        )}
       </div>
-      <div className="relative flex h-8 overflow-hidden rounded-md bg-surface-muted">
-        {segments.map((s) => {
-          const active = activeTimestamp === s.start;
+      <div className="flex h-10 gap-0.5 overflow-hidden rounded-md" onMouseLeave={() => onFocus(null)}>
+        {share.map((s, i) => {
+          const active = (focused ?? pinned) === s.name;
+          const dim = (focused ?? pinned) && !active;
           return (
             <button
-              key={s.start}
+              key={s.name}
               type="button"
-              onClick={() => onSeek(s.start)}
-              title={`${formatTimestamp(s.start)} · ${s.speaker}`}
-              aria-label={`Jump to ${formatTimestamp(s.start)}, ${s.speaker}`}
-              style={{ width: `${((s.end - s.start) / total) * 100}%` }}
+              title={`${s.name} · ${s.pct}% of talk time`}
+              aria-label={`${s.name}, ${s.pct}% of talk time. Highlight their lines`}
+              aria-pressed={pinned === s.name}
+              onMouseEnter={() => onFocus(s.name)}
+              onFocus={() => onFocus(s.name)}
+              onBlur={() => onFocus(null)}
+              onClick={() => onPin(pinned === s.name ? null : s.name)}
+              style={{ flexGrow: Math.max(s.pct, 1), flexBasis: 0 }}
               className={cn(
-                "h-full border-r border-white/70 opacity-80 transition-opacity last:border-r-0 hover:opacity-100",
-                colorOf(s.speaker),
-                active && "opacity-100 ring-2 ring-inset ring-foreground",
+                "flex min-w-0 items-center justify-center gap-1.5 overflow-hidden px-1.5 text-label font-semibold transition-opacity duration-150",
+                SHADES[Math.min(i, SHADES.length - 1)],
+                dim && "opacity-40",
               )}
-            />
+            >
+              {s.pct >= 8 && <span className="truncate">{initials(s.name)}</span>}
+              {s.pct >= 14 && <span className="font-mono text-stamp font-medium opacity-80">{s.pct}%</span>}
+            </button>
           );
         })}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-        {talk.map((p) => (
-          <li key={p.name} className="flex items-center gap-1.5 text-xs text-muted">
-            <span className={cn("h-2 w-2 rounded-full", colorOf(p.name))} />
-            <span className="text-foreground">{p.name}</span>
-            <span className="tabular-nums">{p.pct}%</span>
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        {share.map((s, i) => (
+          <li key={s.name} className="flex items-center gap-1.5 text-label text-muted">
+            <span className={cn("h-2 w-2 rounded-sm", SHADES[Math.min(i, SHADES.length - 1)].split(" ")[0])} aria-hidden="true" />
+            <span className="text-copy">{s.name}</span>
+            <span className="font-mono text-stamp">{s.pct}%</span>
           </li>
         ))}
       </ul>

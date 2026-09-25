@@ -1,13 +1,16 @@
 "use client";
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Flag, Search, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import type { Meeting, TranscriptEntry } from "@/lib/types";
+import type { AnchorKind, Anchors } from "@/lib/utils/anchors";
 import { formatTimestamp } from "@/lib/utils/format";
 import { normalize, queryTerms } from "@/lib/utils/search";
+import { inputBare, inputShell } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
-import { Avatar } from "@/components/common/Avatar";
+import { Badge, StatusBadge } from "@/components/common/TypeBadge";
 import { Highlight } from "@/components/search/Highlight";
+import { Kbd, useModKey } from "@/components/common/Kbd";
 
 export interface SeekRequest {
   timestamp: number;
@@ -19,16 +22,20 @@ interface Props {
   meeting: Meeting;
   seek: SeekRequest | null;
   onSeek: (t: number) => void;
-  /** called before the search box takes focus (e.g. to switch panel tabs) */
+  anchors: Anchors;
+  /** speaker whose lines are highlighted (hover or pinned in the talk-time bar) */
+  speaker: string | null;
+  /** called before the search box takes focus (e.g. to switch the mobile tab) */
   onReveal?: () => void;
   className?: string;
 }
 
-export function Transcript({ meeting, seek, onSeek, onReveal, className }: Props) {
+export function Transcript({ meeting, seek, onSeek, anchors, speaker, onReveal, className }: Props) {
   const [query, setQuery] = useState("");
   const [matchIndex, setMatchIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
+  const mod = useModKey();
 
   const matches = useMemo(() => {
     const terms = queryTerms(query);
@@ -42,12 +49,10 @@ export function Transcript({ meeting, seek, onSeek, onReveal, className }: Props
 
   const current = matches.length ? Math.min(matchIndex, matches.length - 1) : -1;
 
-  // Scroll to a requested timestamp.
   useEffect(() => {
     if (seek) scrollToLine(listRef.current, seek.timestamp);
   }, [seek]);
 
-  // Scroll to the current search match.
   useEffect(() => {
     if (current >= 0) scrollToLine(listRef.current, meeting.transcript[matches[current]].timestamp);
   }, [current, matches, meeting.transcript]);
@@ -77,11 +82,33 @@ export function Transcript({ meeting, seek, onSeek, onReveal, className }: Props
   const currentLine = current >= 0 ? matches[current] : -1;
 
   return (
-    <div className={cn("flex min-h-0 flex-col", className)}>
-      <div className="sticky top-14 z-10 space-y-3 border-b border-border bg-surface px-4 py-3 lg:top-0 xl:static">
+    <section aria-labelledby="transcript-heading" className={className}>
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 id="transcript-heading" className="text-h3">
+          Transcript
+        </h2>
+        <span className="text-label text-muted">{meeting.transcript.length} lines</span>
+      </div>
+
+      <ol ref={listRef} className="-mx-4 sm:mx-0" aria-label="Transcript lines">
+        {meeting.transcript.map((entry, i) => (
+          <Line
+            key={entry.timestamp}
+            entry={entry}
+            active={seek?.timestamp === entry.timestamp}
+            isCurrentMatch={i === currentLine}
+            query={matchSet.has(i) ? query : ""}
+            chips={anchors.byTimestamp.get(entry.timestamp)}
+            speakerFocused={speaker === entry.speaker}
+            onSeek={onSeek}
+          />
+        ))}
+      </ol>
+
+      <div className="sticky bottom-0 z-10 -mx-4 border-t border-border bg-surface px-4 py-3 sm:mx-0 sm:px-0">
         <div className="flex items-center gap-2">
-          <div className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-border bg-background px-3 focus-within:border-border-strong focus-within:bg-surface">
-            <Search className="h-4 w-4 shrink-0 text-subtle" />
+          <div className={cn(inputShell, "h-10 flex-1")}>
+            <Search className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
             <input
               ref={inputRef}
               value={query}
@@ -99,94 +126,52 @@ export function Transcript({ meeting, seek, onSeek, onReveal, className }: Props
               }}
               placeholder="Search transcript"
               aria-label="Search transcript"
-              className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-subtle sm:text-sm"
+              className={inputBare}
             />
-            {query && (
+            {query ? (
               <>
-                <span className="shrink-0 text-xs tabular-nums text-muted" aria-live="polite">
-                  {matches.length ? `${current + 1} of ${matches.length}` : "No matches"}
+                <span className="shrink-0 font-mono text-stamp text-muted" aria-live="polite">
+                  {matches.length ? `${current + 1}/${matches.length}` : "0 found"}
                 </span>
-                <button type="button" onClick={() => setQuery("")} className="shrink-0 rounded p-0.5 text-subtle hover:text-foreground" aria-label="Clear search">
+                <button type="button" onClick={() => setQuery("")} className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-muted hover:text-ink" aria-label="Clear search">
                   <X className="h-4 w-4" />
                 </button>
               </>
+            ) : (
+              <Kbd className="hidden sm:inline-flex">{mod}F</Kbd>
             )}
           </div>
-          {query && (
-            <div className="flex">
-              <button type="button" onClick={() => step(-1)} disabled={!matches.length} className="flex h-10 w-9 items-center justify-center rounded-l-lg border border-border text-muted hover:bg-surface-muted disabled:opacity-40" aria-label="Previous match">
-                <ChevronUp className="h-4 w-4" />
-              </button>
-              <button type="button" onClick={() => step(1)} disabled={!matches.length} className="-ml-px flex h-10 w-9 items-center justify-center rounded-r-lg border border-border text-muted hover:bg-surface-muted disabled:opacity-40" aria-label="Next match">
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          <button type="button" onClick={() => step(-1)} disabled={!matches.length} className="flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted transition-colors duration-150 hover:bg-surface-muted disabled:text-disabled" aria-label="Previous match">
+            <ChevronUp className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => step(1)} disabled={!matches.length} className="flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted transition-colors duration-150 hover:bg-surface-muted disabled:text-disabled" aria-label="Next match">
+            <ChevronDown className="h-4 w-4" />
+          </button>
         </div>
-
-        {meeting.highlights && meeting.highlights.length > 0 && (
-          <div className="scroll-thin -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
-            {meeting.highlights.map((h) => (
-              <button
-                key={h.timestamp}
-                type="button"
-                onClick={() => onSeek(h.timestamp)}
-                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 text-xs text-foreground transition-colors hover:border-border-strong hover:bg-surface-muted/60"
-              >
-                <Flag className="h-3 w-3 text-amber-500" />
-                {h.label}
-                <span className="font-mono tabular-nums text-muted">{formatTimestamp(h.timestamp)}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
-
-      <ol ref={listRef} className="scroll-thin relative flex-1 space-y-0.5 px-2 py-3 xl:overflow-y-auto" aria-label="Transcript">
-        {meeting.transcript.map((entry, i) => (
-          <Line
-            key={entry.timestamp}
-            entry={entry}
-            active={seek?.timestamp === entry.timestamp}
-            isMatch={matchSet.has(i)}
-            isCurrentMatch={i === currentLine}
-            query={matchSet.has(i) ? query : ""}
-            onSeek={onSeek}
-          />
-        ))}
-      </ol>
-    </div>
+    </section>
   );
 }
 
-/**
- * Centres a line. In the desktop rail the list scrolls on its own, so only the list
- * moves (the page stays put); inline on smaller screens the page scrolls instead.
- */
 function scrollToLine(list: HTMLOListElement | null, timestamp: number) {
-  const el = list?.querySelector<HTMLElement>(`[data-ts="${timestamp}"]`);
-  if (!list || !el) return;
-  const ownScroll = getComputedStyle(list).overflowY === "auto" && list.scrollHeight > list.clientHeight;
-  if (ownScroll) {
-    list.scrollTo({ top: el.offsetTop - list.clientHeight / 2 + el.offsetHeight / 2, behavior: "smooth" });
-  } else {
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
-  }
+  list?.querySelector<HTMLElement>(`[data-ts="${timestamp}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 const Line = memo(function Line({
   entry,
   active,
-  isMatch,
   isCurrentMatch,
   query,
+  chips,
+  speakerFocused,
   onSeek,
 }: {
   entry: TranscriptEntry;
   active: boolean;
-  isMatch: boolean;
   isCurrentMatch: boolean;
   query: string;
+  chips?: { kind: AnchorKind; label: string }[];
+  speakerFocused: boolean;
   onSeek: (t: number) => void;
 }) {
   return (
@@ -194,28 +179,39 @@ const Line = memo(function Line({
       data-ts={entry.timestamp}
       id={`t-${entry.timestamp}`}
       className={cn(
-        "flex scroll-mt-40 gap-3 rounded-lg px-2.5 py-2.5 transition-colors",
-        active && "transcript-active",
-        !active && isCurrentMatch && "bg-amber-50 ring-1 ring-amber-200",
-        !active && !isCurrentMatch && isMatch && "bg-surface-muted/60",
+        "grid scroll-mt-24 scroll-mb-24 gap-1 px-4 py-3 transition-colors duration-150 sm:grid-cols-[136px_minmax(0,1fr)] sm:gap-4 sm:rounded-md",
+        active ? "transcript-active" : isCurrentMatch ? "bg-highlight/60" : speakerFocused ? "bg-accent-soft/40" : "hover:bg-surface-muted",
+        speakerFocused && "shadow-[inset_3px_0_0_var(--accent)]",
       )}
     >
-      <Avatar name={entry.speaker} size="sm" className="mt-0.5" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <span className="truncate text-sm font-medium text-foreground">{entry.speaker}</span>
-          <button
-            type="button"
-            onClick={() => onSeek(entry.timestamp)}
-            className="shrink-0 rounded px-1 font-mono text-xs tabular-nums text-accent hover:bg-accent-soft hover:underline"
-            aria-label={`Jump to ${formatTimestamp(entry.timestamp)}`}
-          >
-            {formatTimestamp(entry.timestamp)}
-          </button>
-        </div>
-        <p className="mt-0.5 text-sm leading-relaxed text-foreground/90">
-          {query ? <Highlight text={entry.text} query={query} /> : entry.text}
-        </p>
+      <div className="flex items-baseline gap-2 sm:flex-col sm:gap-0.5">
+        <span className="truncate text-label font-semibold text-ink">{entry.speaker}</span>
+        <button
+          type="button"
+          onClick={() => onSeek(entry.timestamp)}
+          className="-mx-1 rounded px-1 font-mono text-stamp text-muted transition-colors duration-150 hover:bg-highlight hover:text-ink"
+          aria-label={`Jump to line at ${formatTimestamp(entry.timestamp)}`}
+        >
+          {formatTimestamp(entry.timestamp)}
+        </button>
+      </div>
+      <div className="min-w-0">
+        <p className="max-w-[65ch] text-body text-copy">{query ? <Highlight text={entry.text} query={query} /> : entry.text}</p>
+        {chips && chips.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {chips.map((c) =>
+              c.kind === "concern" ? (
+                <StatusBadge key={c.kind} tone="warning">Concern</StatusBadge>
+              ) : c.kind === "decision" ? (
+                <Badge key={c.kind}>Decision</Badge>
+              ) : (
+                <Badge key={c.kind} className="bg-surface-disabled text-copy">
+                  {c.label}
+                </Badge>
+              ),
+            )}
+          </div>
+        )}
       </div>
     </li>
   );

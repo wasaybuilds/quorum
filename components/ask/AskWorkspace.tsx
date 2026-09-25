@@ -2,35 +2,38 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { RotateCcw } from "lucide-react";
+import { CloudOff, MessageSquareText, Search } from "lucide-react";
 import type { Meeting, MeetingType } from "@/lib/types";
+import { btn, container, inputShell, size } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
-import { ChatThread } from "./ChatThread";
-import { useAskChat } from "./useAskChat";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { EmptyState, ErrorState, Loading } from "@/components/common/States";
+import { Badge, StatusBadge } from "@/components/common/TypeBadge";
+import { AnswerText } from "./AnswerText";
+import { SourceCard } from "./SourceCard";
+import { useAskChat, type ChatMessage } from "./useAskChat";
 
-type Scope = "all" | "sales" | "cs" | "team";
+type Scope = "all" | "sales" | "cs" | "internal";
 
 const SCOPES: { key: Scope; label: string; types: MeetingType[] | null }[] = [
   { key: "all", label: "All meetings", types: null },
-  { key: "sales", label: "Sales calls", types: ["sales"] },
+  { key: "sales", label: "Sales", types: ["sales"] },
   { key: "cs", label: "Customer success", types: ["cs"] },
-  { key: "team", label: "Internal & engineering", types: ["internal", "engineering"] },
+  { key: "internal", label: "Internal", types: ["internal", "engineering"] },
 ];
 
-const SUGGESTIONS: Record<Scope, string[]> = {
-  all: [
-    "What issues come up repeatedly in sales calls?",
-    "Which customers are worried about Salesforce sync?",
-    "What are our biggest open risks right now?",
-  ],
-  sales: ["What objections come up most often?", "Where do deals get stuck on security?", "How do prospects react to our pricing?"],
-  cs: ["Which accounts are at risk and why?", "What are customers asking for most?", "Where is there expansion potential?"],
-  team: ["What did engineering decide about the migration?", "What's on the Q4 roadmap?", "What caused the sync incident?"],
+const EXAMPLES: Record<Scope, string[]> = {
+  all: ["What issues come up most in sales calls", "Which customers are worried about Salesforce sync", "What are our biggest open risks"],
+  sales: ["What objections come up most often", "Where do deals get stuck on security", "How do prospects react to our pricing"],
+  cs: ["Which accounts are at risk and why", "What are customers asking for most", "Where is there expansion potential"],
+  internal: ["What did engineering decide about the migration", "What is on the Q4 roadmap", "What caused the sync incident"],
 };
 
 export function AskWorkspace({ meetings }: { meetings: Meeting[] }) {
   const params = useSearchParams();
   const [scope, setScope] = useState<Scope>("all");
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const body = useMemo<{ meetingIds?: string[] }>(() => {
     const types = SCOPES.find((s) => s.key === scope)?.types;
@@ -38,7 +41,6 @@ export function AskWorkspace({ meetings }: { meetings: Meeting[] }) {
   }, [scope, meetings]);
   const chat = useAskChat("/api/ai/ask-multi-meeting", body);
   const { send } = chat;
-
   const count = body.meetingIds?.length ?? meetings.length;
 
   // Ask the ?q= question once (dashboard suggestions and the search palette link here).
@@ -47,76 +49,142 @@ export function AskWorkspace({ meetings }: { meetings: Meeting[] }) {
   useEffect(() => {
     if (initialQ && !asked.current) {
       asked.current = true;
+      setDraft(initialQ);
       send(initialQ);
     }
   }, [initialQ, send]);
 
+  function ask(q = draft) {
+    if (!q.trim() || chat.loading) return;
+    setDraft(q);
+    send(q);
+  }
+
+  // Pair each question with its answer; newest first.
+  const exchanges = useMemo(() => {
+    const pairs: { q: ChatMessage; a?: ChatMessage }[] = [];
+    chat.messages.forEach((m) => {
+      if (m.role === "user") pairs.push({ q: m });
+      else if (pairs.length) pairs[pairs.length - 1].a = m;
+    });
+    return pairs.reverse();
+  }, [chat.messages]);
+
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] flex-col lg:h-dvh">
-      <div className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight text-foreground">Ask Quorum</h1>
-              <p className="mt-0.5 text-sm text-muted">Questions across {count} meetings. Every answer cites the moments it came from.</p>
-            </div>
-            {chat.messages.length > 0 && (
-              <button
-                type="button"
-                onClick={chat.reset}
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
-              >
-                <RotateCcw className="h-3.5 w-3.5" /> New chat
-              </button>
-            )}
-          </div>
-          <div className="scroll-thin -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" role="tablist" aria-label="Scope">
-            {SCOPES.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                role="tab"
-                aria-selected={scope === s.key}
-                onClick={() => {
-                  if (scope === s.key) return;
+    <div className={container}>
+      <PageHeader title="Ask Quorum" description={`Ask across ${count} meetings. Every answer links to the moment it was said.`} />
+
+      <fieldset className="mt-8">
+        <legend className="mb-2 text-label font-medium text-muted">Scope</legend>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {SCOPES.map((s) => (
+            <label key={s.key} className="flex min-h-11 cursor-pointer items-center gap-2 text-body text-copy">
+              <input
+                type="radio"
+                name="scope"
+                value={s.key}
+                checked={scope === s.key}
+                onChange={() => {
                   setScope(s.key);
                   chat.reset();
                 }}
-                className={cn(
-                  "inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-sm transition-colors",
-                  scope === s.key
-                    ? "border-foreground bg-foreground text-white"
-                    : "border-border bg-surface text-muted hover:border-border-strong hover:text-foreground",
-                )}
+                className="h-4 w-4 accent-[#0f766e]"
+              />
+              {s.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <form
+        className="mt-4 flex flex-col gap-2 sm:flex-row"
+        onSubmit={(e) => {
+          e.preventDefault();
+          ask();
+        }}
+      >
+        <div className={cn(inputShell, "h-12 flex-1 px-4")}>
+          <Search className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Ask a question across your meetings"
+            aria-label="Question"
+            autoFocus
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-copy outline-none sm:text-body"
+          />
+        </div>
+        <button type="submit" disabled={!draft.trim() || chat.loading} className={cn(btn.primary, size.lg)}>
+          <MessageSquareText className="h-4 w-4" aria-hidden="true" /> Ask Quorum
+        </button>
+      </form>
+
+      {exchanges.length === 0 && !chat.loading && (
+        <div className="mt-6">
+          <p className="text-label text-muted">Try asking</p>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {EXAMPLES[scope].map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => ask(q)}
+                className={cn(btn.secondary, "min-h-11 justify-start px-4 py-2 text-left")}
               >
-                {s.label}
+                {q}
               </button>
             ))}
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
-        <ChatThread
-          messages={chat.messages}
-          loading={chat.loading}
-          onSend={chat.send}
-          onRetry={chat.retry}
-          suggestions={SUGGESTIONS[scope]}
-          placeholder="Ask across your meetings…"
-          showMeeting
-          autoFocus
-          className="flex-1"
-          empty={
-            <div className="pt-4 sm:pt-10">
-              <p className="text-lg font-semibold text-foreground">What do you want to know?</p>
-              <p className="mt-1 text-sm text-muted">
-                Spot patterns across calls, find who said what, or check what was promised. Try one of these:
-              </p>
-            </div>
-          }
-        />
+      <div className="mt-12 space-y-12">
+        {exchanges.map(({ q, a }) => (
+            <section key={q.id} aria-label={q.content}>
+              <h2 className="text-h2">{q.content}</h2>
+              {!a ? (
+                <Loading message="Searching across meetings…" />
+              ) : a.error ? (
+                <ErrorState className="mt-4" message="Couldn't reach the assistant. Check your connection and try again." onRetry={chat.retry} />
+              ) : a.response && a.response.sources.length === 0 ? (
+                <div className="mt-4 rounded-lg border border-border">
+                  <EmptyState icon={Search} title="No results. Try a different question." description={a.content} />
+                </div>
+              ) : (
+                <Answer message={a} />
+              )}
+            </section>
+        ))}
       </div>
+    </div>
+  );
+}
+
+function Answer({ message }: { message: ChatMessage }) {
+  const r = message.response;
+  return (
+    <div className="mt-4">
+      <AnswerText text={message.content} />
+      {r && (r.patterns?.length || r.fallback) ? (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {r.patterns?.map((p) => <Badge key={p}>{p}</Badge>)}
+          {r.fallback && (
+            <StatusBadge tone="neutral">
+              <CloudOff className="mr-1 h-3 w-3" aria-hidden="true" /> Offline answer
+            </StatusBadge>
+          )}
+        </div>
+      ) : null}
+      {r && r.sources.length > 0 && (
+        <>
+          <h3 className="mt-8 text-label font-medium text-muted">Sources · {r.sources.length}</h3>
+          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {r.sources.map((s) => (
+              <SourceCard key={`${s.meetingId}-${s.timestamp}`} source={s} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

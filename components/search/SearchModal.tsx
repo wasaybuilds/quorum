@@ -83,25 +83,25 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50" onKeyDown={onKeyDown}>
       <motion.div
-        className="absolute inset-0 bg-slate-900/30"
+        className="absolute inset-0 bg-black/50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         onClick={onClose}
       />
       <motion.div
         role="dialog"
         aria-modal="true"
         aria-label="Search meetings"
-        className="absolute inset-x-3 top-3 mx-auto flex max-h-[calc(100dvh-1.5rem)] max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-2xl sm:top-[12vh] sm:max-h-[70vh]"
-        initial={{ opacity: 0, y: -8, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -8, scale: 0.98 }}
-        transition={{ duration: 0.16, ease: "easeOut" }}
+        className="absolute left-1/2 top-4 flex max-h-[calc(100dvh-2rem)] w-[90%] max-w-[600px] -translate-x-1/2 flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-card sm:top-[12vh] sm:max-h-[70vh]"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
       >
         <div className="flex items-center gap-3 border-b border-border px-4">
-          <Search className="h-5 w-5 shrink-0 text-subtle" />
+          <Search className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
           <input
             ref={inputRef}
             value={query}
@@ -110,7 +110,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
               setActiveIndex(0);
             }}
             placeholder="Search meetings, people, or anything said…"
-            className="h-14 min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-subtle"
+            className="h-14 min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none"
             aria-label="Search query"
             aria-controls="search-results"
             aria-activedescendant={flat[active] ? `search-item-${active}` : undefined}
@@ -123,7 +123,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
         <div ref={listRef} id="search-results" role="listbox" className="scroll-thin flex-1 overflow-y-auto p-2">
           {sections.map((section, s) => (
             <div key={section.title} className="mb-1">
-              <p className="px-2.5 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-subtle">{section.title}</p>
+              <p className="px-3 pb-1 pt-2 text-label font-medium text-muted">{section.title}</p>
               {section.items.map((item, j) => {
                 const i = offsets[s] + j;
                 const isActive = i === active;
@@ -138,7 +138,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
                     onMouseMove={() => setActiveIndex(i)}
                     onClick={() => go(item.href)}
                     className={cn(
-                      "flex w-full items-start gap-3 rounded-lg px-2.5 py-2.5 text-left",
+                      "flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors duration-150",
                       isActive ? "bg-surface-muted" : "",
                     )}
                   >
@@ -149,13 +149,13 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
             </div>
           ))}
           {deferred.trim() && flat.length <= 2 && (
-            <p className="px-3 pb-3 pt-1 text-sm text-muted">
+            <p className="px-3 pb-3 pt-1 text-small text-muted">
               No meetings or transcript lines match “{deferred.trim()}”. Try a name, company, or topic like “pricing”.
             </p>
           )}
         </div>
 
-        <div className="hidden items-center gap-4 border-t border-border px-4 py-2.5 text-xs text-muted sm:flex">
+        <div className="hidden items-center gap-4 border-t border-border bg-surface-muted px-4 py-2.5 text-label text-muted sm:flex">
           <span className="flex items-center gap-1.5">
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> navigate
@@ -238,14 +238,14 @@ function buildSections(raw: string): Section[] {
         href: `/meetings/${m.id}?t=${entry.timestamp}`,
         render: () => (
           <>
-            <Quote className="mt-0.5 h-4 w-4 shrink-0 text-subtle" />
+            <Quote className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm leading-snug text-foreground">
+              <span className="block text-body text-copy">
                 <Highlight text={snippet} query={q} />
               </span>
-              <span className="mt-1 block truncate text-xs text-muted">
+              <span className="mt-0.5 block truncate text-label text-muted">
                 {entry.speaker} · {m.title} ·{" "}
-                <span className="font-mono tabular-nums">{formatTimestamp(entry.timestamp)}</span>
+                <span className="font-mono text-stamp">{formatTimestamp(entry.timestamp)}</span>
               </span>
             </span>
           </>
@@ -276,10 +276,10 @@ function buildSections(raw: string): Section[] {
 function MeetingRow({ title, sub, type }: { title: React.ReactNode; sub: React.ReactNode; type: Parameters<typeof TypeBadge>[0]["type"] }) {
   return (
     <>
-      <Video className="mt-0.5 h-4 w-4 shrink-0 text-subtle" />
+      <Video className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-foreground">{title}</span>
-        <span className="mt-0.5 block truncate text-xs text-muted">{sub}</span>
+        <span className="block truncate text-body font-semibold text-ink">{title}</span>
+        <span className="mt-0.5 block truncate text-label text-muted">{sub}</span>
       </span>
       <TypeBadge type={type} className="hidden sm:inline-flex" />
     </>
@@ -289,9 +289,9 @@ function MeetingRow({ title, sub, type }: { title: React.ReactNode; sub: React.R
 function ActionRow({ icon: Icon, label }: { icon: typeof Search; label: string }) {
   return (
     <>
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-      <span className="min-w-0 flex-1 truncate text-sm text-foreground">{label}</span>
-      <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-subtle" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+      <span className="min-w-0 flex-1 truncate text-body text-copy">{label}</span>
+      <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
     </>
   );
 }

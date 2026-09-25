@@ -1,55 +1,46 @@
 import Link from "next/link";
-import { Play } from "lucide-react";
 import type { MeetingSource } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils/format";
+import { link } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
 
-const CARD =
-  "group flex w-full gap-2.5 rounded-lg border border-border bg-surface px-3 py-2.5 text-left transition-colors hover:border-border-strong hover:bg-surface-muted/60";
-
-function Body({ source, showMeeting }: { source: MeetingSource; showMeeting: boolean }) {
-  return (
-    <>
-      <span className="mt-px inline-flex h-5 shrink-0 items-center gap-1 rounded bg-accent-soft px-1.5 font-mono text-[11px] font-medium tabular-nums text-accent">
-        <Play className="h-2.5 w-2.5 fill-current" />
-        {formatTimestamp(source.timestamp)}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs font-medium text-foreground">
-          {source.speaker}
-          {showMeeting && <span className="font-normal text-muted"> · {source.meetingTitle}</span>}
-        </span>
-        <span className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">“{source.text}”</span>
-      </span>
-    </>
-  );
-}
-
-/**
- * A cited transcript line. With `onSeek` it jumps within the current meeting;
- * otherwise it links to the meeting page at that timestamp.
- */
-export function SourceCard({
+/** "[speaker @ m:ss]" — jumps within the current meeting, or opens the meeting at that line. */
+export function SourceLink({
   source,
   onSeek,
-  showMeeting = false,
   className,
 }: {
   source: MeetingSource;
   onSeek?: (timestamp: number) => void;
-  showMeeting?: boolean;
   className?: string;
 }) {
-  if (onSeek) {
-    return (
-      <button type="button" data-source onClick={() => onSeek(source.timestamp)} className={cn(CARD, className)}>
-        <Body source={source} showMeeting={showMeeting} />
-      </button>
-    );
-  }
+  const label = `[${source.speaker} @ ${formatTimestamp(source.timestamp)}]`;
+  const cls = cn(link, "text-body", className);
+  const title = `“${source.text}”`;
+  return onSeek ? (
+    <button type="button" data-source onClick={() => onSeek(source.timestamp)} className={cls} title={title}>
+      {label}
+    </button>
+  ) : (
+    <Link data-source href={`/meetings/${source.meetingId}?t=${source.timestamp}`} className={cls} title={title}>
+      {label}
+    </Link>
+  );
+}
+
+/** Result card for cross-meeting answers: meeting, source link and a short excerpt. */
+export function SourceCard({ source }: { source: MeetingSource }) {
   return (
-    <Link data-source href={`/meetings/${source.meetingId}?t=${source.timestamp}`} className={cn(CARD, className)}>
-      <Body source={source} showMeeting={showMeeting} />
+    <Link
+      href={`/meetings/${source.meetingId}?t=${source.timestamp}`}
+      data-source
+      className="group block rounded-lg border border-border bg-surface p-5 shadow-card transition-colors duration-150 hover:border-border-strong hover:bg-surface-muted"
+    >
+      <p className="text-body font-semibold text-ink">{source.meetingTitle}</p>
+      <p className="mt-1 text-body text-accent-ink group-hover:text-accent-hover group-hover:underline group-hover:underline-offset-2">
+        [{source.speaker} @ {formatTimestamp(source.timestamp)}]
+      </p>
+      <p className="mt-2 line-clamp-3 max-w-[65ch] text-body text-copy">“{source.text}”</p>
     </Link>
   );
 }

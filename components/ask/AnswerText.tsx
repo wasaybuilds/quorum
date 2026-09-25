@@ -18,7 +18,7 @@ export function AnswerText({ text }: { text: string }) {
   }
 
   return (
-    <div className="space-y-2.5 text-sm leading-relaxed text-foreground">
+    <div className="max-w-[65ch] space-y-3 text-body text-copy">
       {blocks
         .filter((b) => b.lines.length)
         .map((b, i) =>
@@ -26,7 +26,7 @@ export function AnswerText({ text }: { text: string }) {
             <ul key={i} className="space-y-1.5 pl-1">
               {b.lines.map((l, j) => (
                 <li key={j} className="flex gap-2">
-                  <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-subtle" />
+                  <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-disabled" />
                   <span>
                     <Inline text={l} />
                   </span>
@@ -49,7 +49,7 @@ function Inline({ text }: { text: string }) {
     <>
       {parts.map((p, i) =>
         p.startsWith("**") && p.endsWith("**") ? (
-          <strong key={i} className="font-semibold">
+          <strong key={i} className="font-semibold text-ink">
             {p.slice(2, -2)}
           </strong>
         ) : (

@@ -1,17 +1,22 @@
-import { AlertCircle, RotateCcw } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { btn, size } from "@/lib/ui";
 
-export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("skeleton", className)} aria-hidden="true" />;
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={cn("h-6 w-6 animate-[spin_0.8s_linear_infinite]", className)} aria-hidden="true">
+      <circle cx="12" cy="12" r="9.5" fill="none" stroke="var(--border)" strokeWidth="2.5" />
+      <path d="M21.5 12a9.5 9.5 0 0 0-9.5-9.5" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
 }
 
-export function SkeletonLines({ lines = 3, className }: { lines?: number; className?: string }) {
+export function Loading({ message, className }: { message: string; className?: string }) {
   return (
-    <div className={cn("space-y-2.5", className)} role="status" aria-label="Loading">
-      {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton key={i} className={cn("h-3.5", i === lines - 1 ? "w-3/5" : "w-full")} />
-      ))}
+    <div role="status" className={cn("flex items-center gap-3 py-6 text-body text-muted", className)}>
+      <Spinner />
+      {message}
     </div>
   );
 }
@@ -31,11 +36,9 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("flex flex-col items-center px-6 py-12 text-center", className)}>
-      <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface-muted text-muted">
-        <Icon className="h-5 w-5" />
-      </span>
-      <p className="text-sm font-medium text-foreground">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>}
+      <Icon className="mb-3 h-6 w-6 text-disabled" aria-hidden="true" />
+      <h3 className="text-h3">{title}</h3>
+      {description && <p className="mt-1 max-w-sm text-small text-muted">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
@@ -51,19 +54,12 @@ export function ErrorState({
   className?: string;
 }) {
   return (
-    <div
-      role="alert"
-      className={cn("flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-800", className)}
-    >
-      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-      <p className="flex-1">{message}</p>
+    <div role="alert" className={cn("flex flex-col items-start gap-3 rounded-lg border border-border bg-surface p-4 sm:flex-row sm:items-center", className)}>
+      <AlertTriangle className="h-6 w-6 shrink-0 text-danger" aria-hidden="true" />
+      <p className="flex-1 text-body text-copy">{message}</p>
       {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-medium hover:bg-red-100"
-        >
-          <RotateCcw className="h-3.5 w-3.5" /> Retry
+        <button type="button" onClick={onRetry} className={cn(btn.secondary, size.sm)}>
+          Try again
         </button>
       )}
     </div>

@@ -1,175 +1,120 @@
 "use client";
 
-import { useMemo } from "react";
-import { AlertTriangle, CheckCircle2, CloudOff, RefreshCw } from "lucide-react";
-import type { MeetingSummary, TranscriptEntry } from "@/lib/types";
-import { rankLines } from "@/lib/utils/search";
+import { CloudOff, RefreshCw } from "lucide-react";
+import type { MeetingSummary } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils/format";
+import { btn, size } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
-import { ErrorState, Skeleton, SkeletonLines } from "@/components/common/States";
+import { ErrorState, Loading } from "@/components/common/States";
+import { Badge } from "@/components/common/TypeBadge";
 
 export type SummaryOrigin = "seed" | "ai" | "fallback";
 
 interface Props {
   summary: MeetingSummary;
-  transcript: TranscriptEntry[];
+  decisionAnchors: (number | null)[];
+  concernAnchors: (number | null)[];
   loading: boolean;
   error: boolean;
   origin: SummaryOrigin;
   onRegenerate: () => void;
   onSeek: (t: number) => void;
+  className?: string;
 }
 
-export function Summary({ summary, transcript, loading, error, origin, onRegenerate, onSeek }: Props) {
+export function Summary({ summary, decisionAnchors, concernAnchors, loading, error, origin, onRegenerate, onSeek, className }: Props) {
   return (
-    <section aria-labelledby="summary-heading" className="rounded-xl border border-border bg-surface">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
-        <div className="flex items-center gap-2">
-          <h2 id="summary-heading" className="text-sm font-semibold text-foreground">
-            Summary
-          </h2>
-          <OriginTag origin={origin} />
+    <section aria-label="Summary" className={className}>
+      {origin !== "seed" && !loading && (
+        <div className="mb-4">
+          {origin === "ai" ? (
+            <Badge>Regenerated just now</Badge>
+          ) : (
+            <Badge className="bg-surface-disabled text-copy">
+              <CloudOff className="h-3 w-3" aria-hidden="true" /> AI unavailable, showing saved notes
+            </Badge>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={onRegenerate}
-          disabled={loading}
-          className="inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted transition-colors hover:bg-surface-muted hover:text-foreground disabled:opacity-60"
-        >
-          <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-          {loading ? "Generating…" : "Regenerate"}
-        </button>
-      </div>
+      )}
+      {error && <ErrorState className="mb-4" message="Couldn't regenerate the summary. The previous version is still shown." onRetry={onRegenerate} />}
 
-      <div className="px-4 py-5 sm:px-5">
-        {error && (
-          <ErrorState className="mb-4" message="Couldn't regenerate the summary. Showing the previous version." onRetry={onRegenerate} />
-        )}
-        {loading ? (
-          <SummarySkeleton />
-        ) : (
-          <>
-            <p className="text-[15px] leading-relaxed text-foreground">{summary.executive_summary}</p>
+      {loading ? (
+        <Loading message="Regenerating summary from the transcript…" />
+      ) : (
+        <>
+          <h3 className="text-label font-medium text-muted">Executive summary</h3>
+          <p className="mt-2 max-w-[65ch] text-body text-copy">{summary.executive_summary}</p>
 
-            <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-muted">Key points</h3>
-            <ul className="mt-2.5 space-y-2">
-              {summary.key_points.map((p) => (
-                <li key={p} className="flex gap-2.5 text-sm leading-relaxed text-foreground">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-border-strong" />
-                  <span>{p}</span>
-                </li>
-              ))}
-            </ul>
+          <h3 className="mt-8 text-label font-medium text-muted">Key points</h3>
+          <ul className="mt-2 list-disc space-y-2 pl-5 text-body text-copy marker:text-disabled">
+            {summary.key_points.map((p) => (
+              <li key={p} className="max-w-[65ch] pl-1">
+                {p}
+              </li>
+            ))}
+          </ul>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <ItemList
-                title="Decisions"
-                items={summary.decisions}
-                transcript={transcript}
-                onSeek={onSeek}
-                icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                tone="bg-emerald-50/50 border-emerald-100"
-                empty="No decisions were recorded."
-              />
-              <ItemList
-                title="Concerns & risks"
-                items={summary.concerns}
-                transcript={transcript}
-                onSeek={onSeek}
-                icon={<AlertTriangle className="h-4 w-4 text-amber-600" />}
-                tone="bg-amber-50/50 border-amber-100"
-                empty="No concerns were raised."
-              />
-            </div>
-          </>
-        )}
-      </div>
+          <LinkedList title="Decisions" items={summary.decisions} anchors={decisionAnchors} onSeek={onSeek} empty="No decisions were recorded." />
+          <LinkedList title="Concerns" items={summary.concerns} anchors={concernAnchors} onSeek={onSeek} empty="No concerns were raised." />
+        </>
+      )}
+
+      <button type="button" onClick={onRegenerate} disabled={loading} className={cn(btn.primary, size.md, "mt-8 w-full")}>
+        <RefreshCw className={cn("h-4 w-4", loading && "animate-[spin_0.8s_linear_infinite]")} aria-hidden="true" />
+        {loading ? "Regenerating…" : "Regenerate summary"}
+      </button>
     </section>
   );
 }
 
-function OriginTag({ origin }: { origin: SummaryOrigin }) {
-  if (origin === "ai") return <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">Just generated</span>;
-  if (origin === "fallback")
-    return (
-      <span
-        className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600"
-        title="The AI service was unavailable, so the saved notes are shown."
-      >
-        <CloudOff className="h-3 w-3" /> Saved notes
-      </span>
-    );
-  return null;
-}
-
-function ItemList({
+function LinkedList({
   title,
   items,
-  transcript,
+  anchors,
   onSeek,
-  icon,
-  tone,
   empty,
 }: {
   title: string;
   items: string[];
-  transcript: TranscriptEntry[];
+  anchors: (number | null)[];
   onSeek: (t: number) => void;
-  icon: React.ReactNode;
-  tone: string;
   empty: string;
 }) {
-  // Link each item to the transcript line that best supports it.
-  const anchors = useMemo(
-    () => items.map((item) => {
-      const i = rankLines(transcript, item, 1)[0];
-      return i === undefined ? null : transcript[i].timestamp;
-    }),
-    [items, transcript],
-  );
-
   return (
-    <div className={cn("rounded-lg border p-4", tone)}>
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        {icon}
-        {title}
-        <span className="font-normal text-muted">{items.length}</span>
+    <>
+      <h3 className="mt-8 text-label font-medium text-muted">
+        {title} <span className="font-mono text-stamp">{items.length}</span>
       </h3>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm text-muted">{empty}</p>
+        <p className="mt-2 text-small text-muted">{empty}</p>
       ) : (
-        <ul className="mt-3 space-y-2.5">
-          {items.map((item, i) => (
-            <li key={item} className="flex items-start justify-between gap-3 text-sm leading-relaxed text-foreground">
-              <span>{item}</span>
-              {anchors[i] !== null && (
-                <button
-                  type="button"
-                  onClick={() => onSeek(anchors[i]!)}
-                  className="mt-0.5 shrink-0 rounded px-1 font-mono text-xs tabular-nums text-accent hover:bg-accent-soft"
-                  aria-label={`Jump to ${formatTimestamp(anchors[i]!)} in transcript`}
-                >
-                  {formatTimestamp(anchors[i]!)}
-                </button>
-              )}
-            </li>
-          ))}
+        <ul className="mt-2 space-y-1">
+          {items.map((item, i) => {
+            const ts = anchors[i];
+            return (
+              <li key={item}>
+                {ts === null ? (
+                  <p className="flex gap-3 py-1.5 text-body text-copy">
+                    <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-disabled" />
+                    {item}
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onSeek(ts)}
+                    className="group -mx-2 flex w-[calc(100%+1rem)] gap-3 rounded-md px-2 py-1.5 text-left text-body text-copy transition-colors duration-150 hover:bg-surface-muted"
+                    aria-label={`${item}. Jump to line at ${formatTimestamp(ts)}`}
+                  >
+                    <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                    <span className="flex-1 group-hover:text-accent-ink group-hover:underline group-hover:underline-offset-2">{item}</span>
+                    <span className="shrink-0 pt-0.5 font-mono text-stamp text-muted group-hover:text-accent-ink">{formatTimestamp(ts)}</span>
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
-    </div>
-  );
-}
-
-function SummarySkeleton() {
-  return (
-    <div role="status" aria-label="Generating summary">
-      <SkeletonLines lines={3} />
-      <Skeleton className="mt-7 h-3 w-24" />
-      <SkeletonLines lines={4} className="mt-3" />
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-      </div>
-    </div>
+    </>
   );
 }

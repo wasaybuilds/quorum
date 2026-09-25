@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { MessageSquareText, Quote, Search, SearchX } from "lucide-react";
+import { MessageSquareText, Search, SearchX } from "lucide-react";
 import type { Meeting } from "@/lib/types";
 import { search } from "@/lib/utils/search";
 import { formatDate, formatTimestamp } from "@/lib/utils/format";
-import { Avatar } from "@/components/common/Avatar";
+import { btn, inputShell, link, size } from "@/lib/ui";
+import { cn } from "@/lib/utils/cn";
 import { EmptyState } from "@/components/common/States";
-import { MeetingCard } from "@/components/meetings/MeetingCard";
+import { MeetingRow } from "@/components/meetings/MeetingCard";
 import { Highlight } from "./Highlight";
 
 const EXAMPLES = ["security review", "Salesforce", "pricing", "Redis", "Karen Whitfield", "duplicate"];
@@ -35,52 +36,48 @@ export function SearchResults({ meetings }: { meetings: Meeting[] }) {
 
   return (
     <div>
-      <div className="flex h-12 items-center gap-2 rounded-xl border border-border bg-surface px-3.5 focus-within:border-border-strong">
-        <Search className="h-5 w-5 shrink-0 text-subtle" />
+      <div className={cn(inputShell, "h-12 px-4")}>
+        <Search className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
-          placeholder="Search meetings, people, or anything said…"
+          placeholder="Search meetings, people, or anything said"
           aria-label="Search"
-          className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-subtle"
+          className="min-w-0 flex-1 bg-transparent text-[16px] text-copy outline-none sm:text-body"
         />
       </div>
 
       {!q ? (
         <div className="mt-6">
-          <p className="text-sm text-muted">Try searching for</p>
+          <p className="text-label text-muted">Try searching for</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {EXAMPLES.map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() => setQuery(e)}
-                className="inline-flex h-9 items-center rounded-full border border-border bg-surface px-3.5 text-sm text-foreground hover:border-border-strong"
-              >
+              <button key={e} type="button" onClick={() => setQuery(e)} className={cn(btn.secondary, size.sm)}>
                 {e}
               </button>
             ))}
           </div>
         </div>
       ) : results.meetings.length === 0 && results.lines.length === 0 ? (
-        <EmptyState
-          className="mt-6 rounded-xl border border-dashed border-border bg-surface"
-          icon={SearchX}
-          title={`No results for “${q}”`}
-          description="Search looks for exact words in titles, companies, participants and transcripts. Ask Quorum can answer broader questions."
-          action={<AskLink q={q} />}
-        />
+        <div className="mt-8 rounded-lg border border-border">
+          <EmptyState
+            icon={SearchX}
+            title={`No results for “${q}”`}
+            description="Search matches exact words in titles, companies, participants and transcripts. Ask Quorum can answer broader questions."
+            action={<AskLink q={q} />}
+          />
+        </div>
       ) : (
-        <div className="mt-6 space-y-8">
+        <div className="mt-8 space-y-12">
           {results.meetings.length > 0 && (
             <section>
-              <h2 className="mb-3 text-sm font-semibold text-foreground">
-                Meetings <span className="font-normal text-muted">{results.meetings.length}</span>
+              <h2 className="mb-4 text-h3">
+                Meetings <span className="font-mono text-stamp font-normal text-muted">{results.meetings.length}</span>
               </h2>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-4 md:gap-0 md:overflow-hidden md:rounded-lg md:border md:border-border md:shadow-card">
                 {results.meetings.map(({ meeting }) => (
-                  <MeetingCard key={meeting.id} meeting={meeting} showSummary={false} />
+                  <MeetingRow key={meeting.id} meeting={meeting} />
                 ))}
               </div>
             </section>
@@ -88,33 +85,31 @@ export function SearchResults({ meetings }: { meetings: Meeting[] }) {
 
           {results.lines.length > 0 && (
             <section>
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-foreground">
-                  Mentioned in transcripts <span className="font-normal text-muted">{results.lines.length}</span>
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <h2 className="text-h3">
+                  Mentioned in transcripts <span className="font-mono text-stamp font-normal text-muted">{results.lines.length}</span>
                 </h2>
-                <AskLink q={q} subtle />
+                <Link href={`/ask?q=${encodeURIComponent(q)}`} className={cn(link, "text-body font-medium")}>
+                  Ask Quorum instead
+                </Link>
               </div>
-              <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+              <ul className="overflow-hidden rounded-lg border border-border shadow-card">
                 {results.lines.map(({ meeting, entry }) => (
-                  <li key={`${meeting.id}-${entry.timestamp}`}>
+                  <li key={`${meeting.id}-${entry.timestamp}`} className="border-t border-border first:border-t-0">
                     <Link
                       href={`/meetings/${meeting.id}?t=${entry.timestamp}`}
-                      className="flex gap-3 px-4 py-3.5 transition-colors hover:bg-surface-muted/40 sm:px-5"
+                      className="block px-4 py-3 transition-colors duration-150 hover:bg-surface-muted sm:px-6 sm:py-4"
                     >
-                      <Avatar name={entry.speaker} size="sm" className="mt-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted">
-                          <span className="font-medium text-foreground">{entry.speaker}</span>
-                          <span className="truncate">
-                            {meeting.title} · {formatDate(meeting.date)}
-                          </span>
-                          <span className="font-mono tabular-nums text-accent">{formatTimestamp(entry.timestamp)}</span>
-                        </p>
-                        <p className="mt-1 text-sm leading-relaxed text-foreground">
-                          <Quote className="mr-1 inline h-3 w-3 -translate-y-0.5 text-subtle" />
-                          <Highlight text={entry.text} query={q} />
-                        </p>
-                      </div>
+                      <p className="flex flex-wrap items-baseline gap-x-2 text-label text-muted">
+                        <span className="font-semibold text-ink">{entry.speaker}</span>
+                        <span className="truncate">
+                          {meeting.title} · {formatDate(meeting.date)}
+                        </span>
+                        <span className="font-mono text-stamp">{formatTimestamp(entry.timestamp)}</span>
+                      </p>
+                      <p className="mt-1 max-w-[65ch] text-body text-copy">
+                        <Highlight text={entry.text} query={q} />
+                      </p>
                     </Link>
                   </li>
                 ))}
@@ -127,17 +122,10 @@ export function SearchResults({ meetings }: { meetings: Meeting[] }) {
   );
 }
 
-function AskLink({ q, subtle = false }: { q: string; subtle?: boolean }) {
+function AskLink({ q }: { q: string }) {
   return (
-    <Link
-      href={`/ask?q=${encodeURIComponent(q)}`}
-      className={
-        subtle
-          ? "inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-accent hover:bg-accent-soft"
-          : "inline-flex h-10 items-center gap-2 rounded-lg bg-foreground px-4 text-sm font-medium text-white hover:bg-slate-800"
-      }
-    >
-      <MessageSquareText className="h-4 w-4" /> Ask Quorum instead
+    <Link href={`/ask?q=${encodeURIComponent(q)}`} className={cn(btn.primary, size.md)}>
+      <MessageSquareText className="h-4 w-4" aria-hidden="true" /> Ask Quorum instead
     </Link>
   );
 }

@@ -84,6 +84,15 @@ AI meeting intelligence workspace. Transform conversations into summaries, decis
 - `?t=<seconds>` on a meeting URL scrolls + highlights that line (used by search results and cited sources); arbitrary values snap to the line being spoken.
 - Ctrl/Cmd+F on a meeting page focuses transcript search first; a second press falls through to the browser's find.
 
+## Design system (v2)
+- Tokens live in `app/globals.css` (`:root` + `@theme inline`); shared class strings (buttons, inputs, cards, container) in `lib/ui.ts`.
+- Inter (400–700) + JetBrains Mono (timestamps, counts). Type scale utilities: `text-h1/h2/h3/body/small/label/stamp`. Body colour token is `copy` (not `body`, which is the 14px size).
+- Accent: `#0D9488` for non-text accents (borders, focus ring, icons, 32px stat figures). Text links and primary buttons use `#0F766E` (hover `#115E59`) because white-on-#0D9488 and #0D9488-on-white are ~3.7:1 and fail WCAG AA at 14px.
+- One accent only: avatars are neutral grey; meeting type is shown by a small dot on a neutral badge and a 4px left border on list rows (teal / green / amber / blue).
+- Radius ≤ 8px, shadow only `0 1px 2px rgba(0,0,0,.05)`, no scale transforms, 150ms colour transitions, page fade-in 200ms, sheets/modals fade + scale 300ms.
+- Meeting detail: xl+ is 60/40 (header, talk-time bar, transcript left; sticky sidebar tabs Summary / Action items / Ask AI right). Below xl the sidebar collapses into a tab bar (Summary / Action items / Transcript) and Ask AI is a 60dvh bottom sheet. Deviation from "stack everything" so the summary isn't buried under a 60-line transcript on phones.
+- "This week" and "overdue" are computed against `DEMO_TODAY` (Sep 25, 2026) in `lib/data/meetings.ts` so static pages stay stable over time.
+
 ## Commit Rules
 - NEVER mention "Claude" in commits, README, or code
 - Commit `.agent-logs/` as you go, not in lump

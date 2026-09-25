@@ -55,17 +55,6 @@ export interface Meeting {
   highlights?: Highlight[];
 }
 
-export interface UpcomingMeeting {
-  id: string;
-  title: string;
-  company: string;
-  type: MeetingType;
-  date: string;
-  duration: number;
-  platform: Meeting["platform"];
-  attendees: string[];
-}
-
 /** A transcript line cited as evidence by an AI answer. */
 export interface MeetingSource {
   meetingId: string;

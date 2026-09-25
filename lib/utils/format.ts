@@ -52,27 +52,6 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const AVATAR_COLORS = [
-  "bg-sky-100 text-sky-800",
-  "bg-emerald-100 text-emerald-800",
-  "bg-amber-100 text-amber-800",
-  "bg-rose-100 text-rose-800",
-  "bg-teal-100 text-teal-800",
-  "bg-orange-100 text-orange-800",
-  "bg-lime-100 text-lime-800",
-  "bg-cyan-100 text-cyan-800",
-  "bg-slate-200 text-slate-800",
-];
-
-function nameHash(name: string): number {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  return hash;
-}
-
-export function avatarColor(name: string): string {
-  return AVATAR_COLORS[nameHash(name) % AVATAR_COLORS.length];
-}
 
 export const TYPE_LABELS: Record<MeetingType, string> = {
   sales: "Sales",
@@ -81,11 +60,19 @@ export const TYPE_LABELS: Record<MeetingType, string> = {
   engineering: "Engineering",
 };
 
-export const TYPE_STYLES: Record<MeetingType, string> = {
-  sales: "bg-blue-50 text-blue-700 ring-blue-600/15",
-  cs: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
-  internal: "bg-amber-50 text-amber-800 ring-amber-600/20",
-  engineering: "bg-slate-100 text-slate-700 ring-slate-500/20",
+/** Type colour: used only for the badge dot and the list row's left border. */
+export const TYPE_DOT: Record<MeetingType, string> = {
+  sales: "bg-accent",
+  cs: "bg-success",
+  internal: "bg-warning",
+  engineering: "bg-info",
+};
+
+export const TYPE_BORDER: Record<MeetingType, string> = {
+  sales: "border-l-accent",
+  cs: "border-l-success",
+  internal: "border-l-warning",
+  engineering: "border-l-info",
 };
 
 export function pluralize(n: number, word: string, plural = `${word}s`): string {
