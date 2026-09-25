@@ -27,10 +27,14 @@ interface Props {
   speaker: string | null;
   /** called before the search box takes focus (e.g. to switch the mobile tab) */
   onReveal?: () => void;
+  /** rendered above the search row inside the sticky toolbar (desktop talk-time bar) */
+  toolbarHeader?: React.ReactNode;
+  /** sticky offset for the toolbar, which depends on the surrounding layout */
+  toolbarClassName?: string;
   className?: string;
 }
 
-export function Transcript({ meeting, seek, onSeek, anchors, speaker, onReveal, className }: Props) {
+export function Transcript({ meeting, seek, onSeek, anchors, speaker, onReveal, toolbarHeader, toolbarClassName, className }: Props) {
   const [query, setQuery] = useState("");
   const [matchIndex, setMatchIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,29 +87,14 @@ export function Transcript({ meeting, seek, onSeek, anchors, speaker, onReveal, 
 
   return (
     <section aria-labelledby="transcript-heading" className={className}>
-      <div className="mb-2 flex items-baseline justify-between">
-        <h2 id="transcript-heading" className="text-h3">
-          Transcript
-        </h2>
-        <span className="text-label text-muted">{meeting.transcript.length} lines</span>
-      </div>
-
-      <ol ref={listRef} className="-mx-4 sm:mx-0" aria-label="Transcript lines">
-        {meeting.transcript.map((entry, i) => (
-          <Line
-            key={entry.timestamp}
-            entry={entry}
-            active={seek?.timestamp === entry.timestamp}
-            isCurrentMatch={i === currentLine}
-            query={matchSet.has(i) ? query : ""}
-            chips={anchors.byTimestamp.get(entry.timestamp)}
-            speakerFocused={speaker === entry.speaker}
-            onSeek={onSeek}
-          />
-        ))}
-      </ol>
-
-      <div className="sticky bottom-0 z-10 -mx-4 border-t border-border bg-surface px-4 py-3 sm:mx-0 sm:px-0">
+      <div className={cn("sticky z-10 -mx-4 border-b border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6", toolbarClassName)}>
+        {toolbarHeader}
+        <div className="mb-2 flex items-baseline justify-between">
+          <h2 id="transcript-heading" className="text-h3">
+            Transcript
+          </h2>
+          <span className="text-label text-muted">{meeting.transcript.length} lines</span>
+        </div>
         <div className="flex items-center gap-2">
           <div className={cn(inputShell, "h-10 flex-1")}>
             <Search className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
@@ -149,6 +138,21 @@ export function Transcript({ meeting, seek, onSeek, anchors, speaker, onReveal, 
           </button>
         </div>
       </div>
+
+      <ol ref={listRef} className="-mx-4 py-2 sm:mx-0" aria-label="Transcript lines">
+        {meeting.transcript.map((entry, i) => (
+          <Line
+            key={entry.timestamp}
+            entry={entry}
+            active={seek?.timestamp === entry.timestamp}
+            isCurrentMatch={i === currentLine}
+            query={matchSet.has(i) ? query : ""}
+            chips={anchors.byTimestamp.get(entry.timestamp)}
+            speakerFocused={speaker === entry.speaker}
+            onSeek={onSeek}
+          />
+        ))}
+      </ol>
     </section>
   );
 }

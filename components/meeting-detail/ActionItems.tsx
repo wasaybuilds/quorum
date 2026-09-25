@@ -16,7 +16,16 @@ type Filter = "all" | "pending" | "completed";
 
 const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
-export function ActionItems({ items: initial, className }: { items: ActionItem[]; className?: string }) {
+export function ActionItems({
+  items: initial,
+  stickyClassName,
+  className,
+}: {
+  items: ActionItem[];
+  /** sticky offset for the header row, which depends on the surrounding layout */
+  stickyClassName?: string;
+  className?: string;
+}) {
   const [items, setItems] = useState(() => initial.map((item, id) => ({ ...item, id })));
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortKey>("due");
@@ -44,11 +53,11 @@ export function ActionItems({ items: initial, className }: { items: ActionItem[]
     setItems((list) => list.map((i) => (i.id === id ? { ...i, status: i.status === "completed" ? "pending" : "completed" } : i)));
 
   return (
-    <section aria-label="Action items" className={className}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-label text-muted">
-          {done} of {items.length} done
-        </p>
+    <section aria-labelledby="actions-heading" className={className}>
+      <div className={cn("sticky z-10 -mx-4 flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6", stickyClassName)}>
+        <h2 id="actions-heading" className="text-h3">
+          Action items <span className="font-mono text-stamp font-normal text-muted">{done}/{items.length} done</span>
+        </h2>
         <div className="flex gap-2">
           <Select
             label="Show"

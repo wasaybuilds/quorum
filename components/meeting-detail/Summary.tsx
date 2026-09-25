@@ -1,11 +1,10 @@
 "use client";
 
-import { CloudOff, RefreshCw } from "lucide-react";
+import { CloudOff, RotateCw } from "lucide-react";
 import type { MeetingSummary } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils/format";
-import { btn, size } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
-import { ErrorState, Loading } from "@/components/common/States";
+import { ErrorState, Loading, Spinner } from "@/components/common/States";
 import { Badge } from "@/components/common/TypeBadge";
 
 export type SummaryOrigin = "seed" | "ai" | "fallback";
@@ -19,12 +18,28 @@ interface Props {
   origin: SummaryOrigin;
   onRegenerate: () => void;
   onSeek: (t: number) => void;
+  /** sticky offset for the header row, which depends on the surrounding layout */
+  stickyClassName?: string;
   className?: string;
 }
 
-export function Summary({ summary, decisionAnchors, concernAnchors, loading, error, origin, onRegenerate, onSeek, className }: Props) {
+export function Summary({ summary, decisionAnchors, concernAnchors, loading, error, origin, onRegenerate, onSeek, stickyClassName, className }: Props) {
   return (
-    <section aria-label="Summary" className={className}>
+    <section aria-labelledby="summary-heading" className={className}>
+      <div className={cn("sticky z-10 -mx-4 mb-4 flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6", stickyClassName)}>
+        <h2 id="summary-heading" className="text-h3">
+          Summary
+        </h2>
+        <button
+          type="button"
+          onClick={onRegenerate}
+          disabled={loading}
+          className="inline-flex h-8 items-center gap-2 rounded-md border border-border bg-surface-muted px-3 text-body font-medium text-copy transition-colors duration-150 hover:bg-border hover:text-accent-ink disabled:cursor-not-allowed disabled:text-muted"
+        >
+          {loading ? <Spinner className="h-4 w-4" /> : <RotateCw className="h-4 w-4" aria-hidden="true" />}
+          {loading ? "Regenerating" : "Regenerate"}
+        </button>
+      </div>
       {origin !== "seed" && !loading && (
         <div className="mb-4">
           {origin === "ai" ? (
@@ -59,10 +74,6 @@ export function Summary({ summary, decisionAnchors, concernAnchors, loading, err
         </>
       )}
 
-      <button type="button" onClick={onRegenerate} disabled={loading} className={cn(btn.primary, size.md, "mt-8 w-full")}>
-        <RefreshCw className={cn("h-4 w-4", loading && "animate-[spin_0.8s_linear_infinite]")} aria-hidden="true" />
-        {loading ? "Regenerating…" : "Regenerate summary"}
-      </button>
     </section>
   );
 }

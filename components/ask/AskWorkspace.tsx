@@ -7,6 +7,7 @@ import type { Meeting, MeetingType } from "@/lib/types";
 import { btn, container, inputShell, size } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { TabBar } from "@/components/common/TabBar";
 import { EmptyState, ErrorState, Loading } from "@/components/common/States";
 import { Badge, StatusBadge } from "@/components/common/TypeBadge";
 import { AnswerText } from "./AnswerText";
@@ -74,30 +75,22 @@ export function AskWorkspace({ meetings }: { meetings: Meeting[] }) {
     <div className={container}>
       <PageHeader title="Ask Quorum" description={`Ask across ${count} meetings. Every answer links to the moment it was said.`} />
 
-      <fieldset className="mt-8">
-        <legend className="mb-2 text-label font-medium text-muted">Scope</legend>
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          {SCOPES.map((s) => (
-            <label key={s.key} className="flex min-h-11 cursor-pointer items-center gap-2 text-body text-copy">
-              <input
-                type="radio"
-                name="scope"
-                value={s.key}
-                checked={scope === s.key}
-                onChange={() => {
-                  setScope(s.key);
-                  chat.reset();
-                }}
-                className="h-4 w-4 accent-[#0f766e]"
-              />
-              {s.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <div className="scroll-thin mt-8 overflow-x-auto">
+        <TabBar
+          label="Scope"
+          active={scope}
+          onChange={(id) => {
+            if (id === scope) return;
+            setScope(id);
+            chat.reset();
+          }}
+          tabs={SCOPES.map((sc) => ({ id: sc.key, label: sc.label }))}
+          className="min-w-max"
+        />
+      </div>
 
       <form
-        className="mt-4 flex flex-col gap-2 sm:flex-row"
+        className="mt-6 flex flex-col gap-2 sm:flex-row"
         onSubmit={(e) => {
           e.preventDefault();
           ask();

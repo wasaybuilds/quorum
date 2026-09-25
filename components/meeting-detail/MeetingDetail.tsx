@@ -3,12 +3,12 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { MessageSquareText, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { Meeting, MeetingSummary } from "@/lib/types";
 import { buildAnchors } from "@/lib/utils/anchors";
-import { btn } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
-import { ChatThread } from "@/components/ask/ChatThread";
+import { TabBar } from "@/components/common/TabBar";
+import { ChatInput, ChatMessages } from "@/components/ask/ChatThread";
 import { useAskChat } from "@/components/ask/useAskChat";
 import { MeetingHeader } from "./MeetingHeader";
 import { SpeakerTimeline } from "./SpeakerTimeline";
@@ -16,10 +16,10 @@ import { Summary, type SummaryOrigin } from "./Summary";
 import { ActionItems } from "./ActionItems";
 import { Transcript, type SeekRequest } from "./Transcript";
 
-/** Right sidebar tabs on desktop. */
+/** Right-column tabs on desktop (xl+). */
 type Panel = "summary" | "actions" | "ask";
-/** Tab bar below xl, where the sidebar is hidden and Ask AI is a bottom sheet. */
-type MobileView = "summary" | "actions" | "transcript";
+/** Tabs below xl. "ask" opens the bottom sheet rather than a view. */
+type MobileTab = "summary" | "actions" | "transcript" | "ask";
 
 const SUGGESTIONS: Record<Meeting["type"], string[]> = {
   sales: ["What were the customer's concerns?", "What did we agree on pricing?", "What are the next steps and owners?"],
@@ -28,9 +28,19 @@ const SUGGESTIONS: Record<Meeting["type"], string[]> = {
   engineering: ["What was decided?", "What are the main technical risks?", "What are the next steps?"],
 };
 
+/*
+ * Scrolling model
+ * - xl+: the page is exactly one viewport tall. The header row is fixed; the left
+ *   column (talk time + transcript) and the right column (tab content) each have
+ *   exactly one scroll area. The Ask AI input is docked under the right column.
+ * - below xl: only the window scrolls. The tab bar and each section's toolbar are
+ *   sticky; Ask AI opens as a 60dvh bottom sheet.
+ */
+const STICKY = "top-[104px] lg:top-12 xl:top-0"; // 56px mobile nav + 48px tab bar; tab bar only on lg; own scroll area on xl
+
 export function MeetingDetail({ meeting }: { meeting: Meeting }) {
   const [panel, setPanel] = useState<Panel>("summary");
-  const [view, setView] = useState<MobileView>("summary");
+  const [view, setView] = useState<Exclude<MobileTab, "ask">>("summary");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [seek, setSeek] = useState<SeekRequest | null>(null);
   const [hoverSpeaker, setHoverSpeaker] = useState<string | null>(null);
@@ -66,6 +76,14 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
   const seekFromUi = useCallback((t: number) => onSeek(t), [onSeek]);
   const revealTranscript = useCallback(() => setView("transcript"), []);
 
+  const ask = useCallback(
+    (q: string) => {
+      setPanel("ask");
+      chat.send(q);
+    },
+    [chat],
+  );
+
   async function regenerate() {
     setSummaryLoading(true);
     setSummaryError(false);
@@ -88,14 +106,13 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
     }
   }
 
-  const chatProps = {
+  const messagesProps = {
     messages: chat.messages,
     loading: chat.loading,
-    onSend: chat.send,
+    onSend: ask,
     onRetry: chat.retry,
     onSeek: seekFromUi,
     suggestions: SUGGESTIONS[meeting.type],
-    placeholder: "Ask about this meeting…",
     empty: (
       <div>
         <h3 className="text-h3">Ask about this meeting</h3>
@@ -104,100 +121,95 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
     ),
   };
 
-  // Mobile visibility comes from `view`; desktop (xl) visibility from `panel`.
-  const show = (m: MobileView | null, p: Panel | null) =>
-    cn(view === m ? "block" : "hidden", panel === p ? "xl:block" : "xl:hidden");
+  // Below xl visibility follows `view`; on xl it follows `panel`.
+  const show = (v: typeof view, p: Panel) => cn(view === v ? "block" : "hidden", panel === p ? "xl:block" : "xl:hidden");
+  const timeline = (
+    <SpeakerTimeline meeting={meeting} focused={hoverSpeaker} onFocus={setHoverSpeaker} pinned={pinnedSpeaker} onPin={setPinnedSpeaker} />
+  );
 
   return (
-    <div className="xl:grid xl:grid-cols-[minmax(0,3fr)_minmax(380px,2fr)]">
+    <div className="xl:flex xl:h-dvh xl:flex-col">
       <Suspense fallback={null}>
         <SeekFromUrl onSeek={onSeek} />
       </Suspense>
 
-      {/* Left: header, talk time, transcript */}
-      <div className="min-w-0 px-4 pt-6 sm:px-6 lg:px-8 lg:pt-8">
+      {/* Header: fixed row on xl, scrolls away below xl */}
+      <div className="border-border px-4 pb-6 pt-4 sm:px-6 xl:shrink-0 xl:border-b xl:pb-5 xl:pt-3">
         <MeetingHeader meeting={meeting} />
-        <div className="mt-6">
-          <SpeakerTimeline
-            meeting={meeting}
-            focused={hoverSpeaker}
-            onFocus={setHoverSpeaker}
-            pinned={pinnedSpeaker}
-            onPin={setPinnedSpeaker}
-          />
-        </div>
-
-        <div className="sticky top-14 z-20 -mx-4 mt-6 border-b border-border bg-surface px-4 sm:-mx-6 sm:px-6 lg:top-0 xl:hidden" role="tablist" aria-label="Meeting sections">
-          <div className="flex gap-1">
-            {(
-              [
-                ["summary", "Summary"],
-                ["actions", "Action items"],
-                ["transcript", "Transcript"],
-              ] as [MobileView, string][]
-            ).map(([key, label]) => (
-              <TabButton key={key} active={view === key} onClick={() => setView(key)}>
-                {label}
-              </TabButton>
-            ))}
-          </div>
-        </div>
-
-        <Transcript
-          meeting={meeting}
-          seek={seek}
-          onSeek={seekFromUi}
-          anchors={anchors}
-          speaker={hoverSpeaker ?? pinnedSpeaker}
-          onReveal={revealTranscript}
-          className={cn("mt-6 xl:mt-8", view === "transcript" ? "block" : "hidden xl:block")}
-        />
+        <div className="mt-6 xl:hidden">{timeline}</div>
       </div>
 
-      {/* Right: sidebar with tabs on xl; below xl its sections follow the tab bar */}
-      <aside className="min-w-0 px-4 pb-24 sm:px-6 lg:px-8 xl:sticky xl:top-0 xl:flex xl:h-screen xl:flex-col xl:border-l xl:border-border xl:bg-surface xl:px-0 xl:pb-0">
-        <div className="hidden h-16 shrink-0 items-end gap-1 border-b border-border px-6 xl:flex" role="tablist" aria-label="Meeting sidebar">
-          <TabButton active={panel === "summary"} onClick={() => setPanel("summary")}>
-            Summary
-          </TabButton>
-          <TabButton active={panel === "actions"} onClick={() => setPanel("actions")}>
-            Action items
-          </TabButton>
-          <TabButton active={panel === "ask"} onClick={() => setPanel("ask")} dot={chat.messages.length > 0}>
-            Ask AI
-          </TabButton>
-        </div>
+      {/* Below xl: one tab bar, one visible section */}
+      <TabBar
+        label="Meeting sections"
+        fill
+        className="sticky top-14 z-20 px-2 sm:px-4 lg:top-0 xl:hidden"
+        active={sheetOpen ? "ask" : view}
+        onChange={(id) => (id === "ask" ? setSheetOpen(true) : setView(id))}
+        tabs={[
+          { id: "summary", label: "Summary" },
+          { id: "actions", label: "Action items" },
+          { id: "transcript", label: "Transcript" },
+          { id: "ask", label: "Ask AI", dot: chat.messages.length > 0 },
+        ]}
+      />
 
-        <div className={cn("scroll-thin min-h-0 xl:flex-1 xl:overflow-y-auto xl:px-6 xl:py-6", panel === "ask" && "xl:hidden")}>
-          <Summary
-            summary={summary}
-            decisionAnchors={anchors.decisions}
-            concernAnchors={anchors.concerns}
-            loading={summaryLoading}
-            error={summaryError}
-            origin={origin}
-            onRegenerate={regenerate}
+      <div className="xl:grid xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,3fr)_minmax(380px,2fr)]">
+        {/* Left column: the transcript's one scroll area on xl */}
+        <div className={cn("scroll-thin min-w-0 px-4 pb-8 sm:px-6 xl:block xl:min-h-0 xl:overflow-y-auto", view === "transcript" ? "block" : "hidden")}>
+          <Transcript
+            meeting={meeting}
+            seek={seek}
             onSeek={seekFromUi}
-            className={cn("pt-6 xl:pt-0", show("summary", "summary"))}
+            anchors={anchors}
+            speaker={hoverSpeaker ?? pinnedSpeaker}
+            onReveal={revealTranscript}
+            toolbarHeader={<div className="mb-4 hidden xl:block">{timeline}</div>}
+            toolbarClassName={STICKY}
           />
-          <ActionItems key={summaryVersion} items={summary.action_items} className={cn("pt-6 xl:pt-0", show("actions", "actions"))} />
         </div>
 
-        <div className={cn("hidden min-h-0 flex-1", panel === "ask" && "xl:flex xl:flex-col")}>
-          <ChatThread {...chatProps} className="flex-1" />
-        </div>
-      </aside>
+        {/* Right column: tab bar, one scroll area, docked Ask AI input */}
+        <aside className="min-w-0 xl:flex xl:min-h-0 xl:flex-col xl:border-l xl:border-border">
+          <TabBar
+            label="Meeting sidebar"
+            className="hidden shrink-0 px-2 xl:flex"
+            active={panel}
+            onChange={setPanel}
+            tabs={[
+              { id: "summary", label: "Summary" },
+              { id: "actions", label: "Action items" },
+              { id: "ask", label: "Ask AI", dot: chat.messages.length > 0 },
+            ]}
+          />
 
-      {/* Below xl: Ask AI in a bottom sheet */}
-      <button
-        type="button"
-        onClick={() => setSheetOpen(true)}
-        className={cn(btn.primary, "fixed right-4 z-30 h-12 px-5 xl:hidden", view === "transcript" ? "bottom-20" : "bottom-5")}
-      >
-        <MessageSquareText className="h-4 w-4" aria-hidden="true" />
-        Ask AI
-      </button>
+          <div className="scroll-thin px-4 pb-8 sm:px-6 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
+            <Summary
+              summary={summary}
+              decisionAnchors={anchors.decisions}
+              concernAnchors={anchors.concerns}
+              loading={summaryLoading}
+              error={summaryError}
+              origin={origin}
+              onRegenerate={regenerate}
+              onSeek={seekFromUi}
+              stickyClassName={STICKY}
+              className={show("summary", "summary")}
+            />
+            <ActionItems key={summaryVersion} items={summary.action_items} stickyClassName={STICKY} className={show("actions", "actions")} />
+            <div className={cn("hidden pt-6", panel === "ask" && "xl:block")}>
+              <ChatMessages {...messagesProps} />
+            </div>
+          </div>
 
+          <div className="hidden shrink-0 border-t border-border px-6 py-3 xl:block">
+            <p className="mb-2 text-label font-medium text-muted">Ask AI about this meeting</p>
+            <ChatInput onSend={ask} loading={chat.loading} placeholder="Ask about this meeting…" />
+          </div>
+        </aside>
+      </div>
+
+      {/* Below xl: Ask AI bottom sheet */}
       <AnimatePresence>
         {sheetOpen && (
           <div className="fixed inset-0 z-50 xl:hidden">
@@ -233,30 +245,15 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <ChatThread {...chatProps} className="flex-1" />
+              <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-5">
+                <ChatMessages {...messagesProps} />
+              </div>
+              <ChatInput onSend={ask} loading={chat.loading} placeholder="Ask about this meeting…" className="border-t border-border px-4 py-3" />
             </motion.div>
           </div>
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-function TabButton({ active, onClick, children, dot }: { active: boolean; onClick: () => void; children: React.ReactNode; dot?: boolean }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={cn(
-        "relative -mb-px inline-flex h-12 items-center gap-1.5 border-b-2 px-3 text-body font-medium transition-colors duration-150",
-        active ? "border-accent text-accent-ink" : "border-transparent text-muted hover:text-ink",
-      )}
-    >
-      {children}
-      {dot && !active && <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-label="has messages" />}
-    </button>
   );
 }
 
