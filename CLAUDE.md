@@ -7,7 +7,7 @@
 - **Path:** Desktop/GitHub/quorum
 - **GitHub:** https://github.com/wasaybuilds/quorum
 - **Deadline:** 24 hours from start
-- **Deployment:** Railway
+- **Deployment:** Railway (personal account, not the HOF workspaces) — https://quorum-production-91b5.up.railway.app
 
 ## Product Vision
 AI meeting intelligence workspace. Transform conversations into summaries, decisions, action items, searchable archive, and Ask AI interface.
@@ -60,9 +60,11 @@ AI meeting intelligence workspace. Transform conversations into summaries, decis
 - [x] Meeting detail built
 - [x] AI integration complete (3 routes + offline fallback)
 - [x] Search implemented (Cmd/Ctrl+K palette + /search page)
-- [ ] Polish + responsive
-- [ ] Production build verified
-- [ ] Deployed to Railway
+- [x] Polish + responsive (browser QA at 375 / 768 / 1440, no overflow, no console errors)
+- [x] Production build verified
+- [x] Deployed to Railway: https://quorum-production-91b5.up.railway.app (project `quorum`, auto-deploys from `main`)
+- [ ] ANTHROPIC_API_KEY set on Railway (until then the live site serves offline answers)
+- [ ] Loom walkthrough
 
 ## Where things live
 - Types: `lib/types.ts`. Seed library + calendar stub + stats: `lib/data/meetings.ts`.
