@@ -44,23 +44,23 @@ export function MobileNav() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
-            className="fixed inset-0 z-50 flex flex-col bg-surface-muted lg:hidden"
+            className="fixed inset-0 z-50 flex flex-col bg-[#111827] lg:hidden"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
-            <div className="flex h-14 shrink-0 items-center justify-between border-b border-border pl-4 pr-2">
-              <Logo />
-              <button type="button" onClick={() => setOpen(false)} className={ICON_BTN} aria-label="Close menu">
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 pl-4 pr-2">
+              <Logo tone="dark" />
+              <button type="button" onClick={() => setOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-md text-gray-300 transition-colors duration-150 hover:bg-white/5 hover:text-white" aria-label="Close menu">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="px-4 pt-4">
               <NavLinks onNavigate={() => setOpen(false)} />
             </div>
-            <div className="mt-auto border-t border-border p-4">
-              <UserCard />
+            <div className="mt-auto border-t border-white/10 p-4">
+              <UserCard tone="dark" />
             </div>
           </motion.div>
         )}

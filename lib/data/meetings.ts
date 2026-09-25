@@ -53,6 +53,7 @@ export function getStats(list: Meeting[] = meetings) {
   const people = new Set(list.flatMap((m) => m.participants.map((p) => p.name)));
   return {
     totalMeetings: list.length,
+    totalMinutes: list.reduce((sum, m) => sum + m.duration, 0),
     meetingsThisWeek: list.filter((m) => new Date(m.date).getTime() >= weekAgo).length,
     decisions: list.reduce((sum, m) => sum + m.summary.decisions.length, 0),
     actionItems: actionItems.length,

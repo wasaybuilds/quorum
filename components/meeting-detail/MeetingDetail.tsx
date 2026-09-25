@@ -134,7 +134,7 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
       </Suspense>
 
       {/* Header: fixed row on xl, scrolls away below xl */}
-      <div className="border-border px-4 pb-6 pt-4 sm:px-6 xl:shrink-0 xl:border-b xl:pb-5 xl:pt-3">
+      <div className="border-b border-border bg-surface px-4 pb-6 pt-4 sm:px-6 xl:shrink-0 xl:pb-5 xl:pt-3">
         <MeetingHeader meeting={meeting} />
         <div className="mt-6 xl:hidden">{timeline}</div>
       </div>
@@ -170,7 +170,7 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
         </div>
 
         {/* Right column: tab bar, one scroll area, docked Ask AI input */}
-        <aside className="min-w-0 xl:flex xl:min-h-0 xl:flex-col xl:border-l xl:border-border">
+        <aside className="min-w-0 bg-surface xl:flex xl:min-h-0 xl:flex-col xl:border-l xl:border-border">
           <TabBar
             label="Meeting sidebar"
             className="hidden shrink-0 px-2 xl:flex"

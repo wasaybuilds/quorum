@@ -184,7 +184,7 @@ const Line = memo(function Line({
       id={`t-${entry.timestamp}`}
       className={cn(
         "grid scroll-mt-24 scroll-mb-24 gap-1 px-4 py-3 transition-colors duration-150 sm:grid-cols-[136px_minmax(0,1fr)] sm:gap-4 sm:rounded-md",
-        active ? "transcript-active" : isCurrentMatch ? "bg-highlight/60" : speakerFocused ? "bg-accent-soft/40" : "hover:bg-surface-muted",
+        active ? "transcript-active" : isCurrentMatch ? "bg-highlight/60" : speakerFocused ? "bg-accent-soft/60" : "hover:bg-surface",
         speakerFocused && "shadow-[inset_3px_0_0_var(--accent)]",
       )}
     >
@@ -209,7 +209,7 @@ const Line = memo(function Line({
               ) : c.kind === "decision" ? (
                 <Badge key={c.kind}>Decision</Badge>
               ) : (
-                <Badge key={c.kind} className="bg-surface-disabled text-copy">
+                <Badge key={c.kind} className="border border-border bg-surface text-copy">
                   {c.label}
                 </Badge>
               ),
