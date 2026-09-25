@@ -64,19 +64,6 @@ const AVATAR_COLORS = [
   "bg-slate-200 text-slate-800",
 ];
 
-// Same order as AVATAR_COLORS so a speaker's bar matches their avatar.
-const BAR_COLORS = [
-  "bg-sky-400",
-  "bg-emerald-400",
-  "bg-amber-400",
-  "bg-rose-400",
-  "bg-teal-400",
-  "bg-orange-400",
-  "bg-lime-500",
-  "bg-cyan-400",
-  "bg-slate-400",
-];
-
 function nameHash(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
@@ -85,10 +72,6 @@ function nameHash(name: string): number {
 
 export function avatarColor(name: string): string {
   return AVATAR_COLORS[nameHash(name) % AVATAR_COLORS.length];
-}
-
-export function speakerBarColor(name: string): string {
-  return BAR_COLORS[nameHash(name) % BAR_COLORS.length];
 }
 
 export const TYPE_LABELS: Record<MeetingType, string> = {

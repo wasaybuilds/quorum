@@ -19,7 +19,7 @@ function Body({ source, showMeeting }: { source: MeetingSource; showMeeting: boo
           {source.speaker}
           {showMeeting && <span className="font-normal text-muted"> · {source.meetingTitle}</span>}
         </span>
-        <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-muted">“{source.text}”</span>
+        <span className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted">“{source.text}”</span>
       </span>
     </>
   );
@@ -42,13 +42,13 @@ export function SourceCard({
 }) {
   if (onSeek) {
     return (
-      <button type="button" onClick={() => onSeek(source.timestamp)} className={cn(CARD, className)}>
+      <button type="button" data-source onClick={() => onSeek(source.timestamp)} className={cn(CARD, className)}>
         <Body source={source} showMeeting={showMeeting} />
       </button>
     );
   }
   return (
-    <Link href={`/meetings/${source.meetingId}?t=${source.timestamp}`} className={cn(CARD, className)}>
+    <Link data-source href={`/meetings/${source.meetingId}?t=${source.timestamp}`} className={cn(CARD, className)}>
       <Body source={source} showMeeting={showMeeting} />
     </Link>
   );

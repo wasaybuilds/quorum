@@ -47,9 +47,14 @@ export function ChatThread({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Keep the latest question at the top of the view so a long answer reads from its start.
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    if (!el) return;
+    const questions = el.querySelectorAll<HTMLElement>("[data-question]");
+    const last = questions[questions.length - 1];
+    const top = last ? last.offsetTop - 12 : el.scrollHeight;
+    el.scrollTo({ top, behavior: "smooth" });
   }, [messages.length, loading]);
 
   useEffect(() => {
@@ -67,7 +72,7 @@ export function ChatThread({
 
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
-      <div ref={scrollRef} className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-4" aria-live="polite">
+      <div ref={scrollRef} className="scroll-thin relative min-h-0 flex-1 overflow-y-auto px-4 py-4" aria-live="polite">
         {messages.length === 0 && !loading ? (
           <div>
             {empty}
@@ -90,6 +95,7 @@ export function ChatThread({
               m.role === "user" ? (
                 <motion.div
                   key={m.id}
+                  data-question
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="ml-auto w-fit max-w-[88%] rounded-2xl rounded-br-md bg-foreground px-3.5 py-2 text-sm text-white"
@@ -172,6 +178,8 @@ function AssistantAnswer({
   showMeeting: boolean;
 }) {
   const r = message.response;
+  const [showAll, setShowAll] = useState(false);
+  const sources = r ? (showAll ? r.sources : r.sources.slice(0, 3)) : [];
   return (
     <div>
       <AnswerText text={message.content} />
@@ -191,10 +199,19 @@ function AssistantAnswer({
             {r.sources.length} {r.sources.length === 1 ? "source" : "sources"}
           </p>
           <div className="space-y-1.5">
-            {r.sources.map((s) => (
+            {sources.map((s) => (
               <SourceCard key={`${s.meetingId}-${s.timestamp}`} source={s} onSeek={onSeek} showMeeting={showMeeting} />
             ))}
           </div>
+          {r.sources.length > 3 && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-1.5 inline-flex h-8 items-center rounded-md px-2 text-xs font-medium text-accent hover:bg-accent-soft"
+            >
+              {showAll ? "Show fewer" : `Show all ${r.sources.length} sources`}
+            </button>
+          )}
         </div>
       )}
       {r && (r.confidence || r.fallback) && (

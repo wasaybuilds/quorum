@@ -14,7 +14,7 @@ export function RecentMeetings() {
           View all <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 gap-3">
         {meetings.slice(0, 5).map((m) => (
           <MeetingCard key={m.id} meeting={m} />
         ))}

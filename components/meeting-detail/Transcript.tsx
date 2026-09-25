@@ -44,16 +44,12 @@ export function Transcript({ meeting, seek, onSeek, onReveal, className }: Props
 
   // Scroll to a requested timestamp.
   useEffect(() => {
-    if (!seek) return;
-    const el = listRef.current?.querySelector<HTMLElement>(`[data-ts="${seek.timestamp}"]`);
-    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (seek) scrollToLine(listRef.current, seek.timestamp);
   }, [seek]);
 
   // Scroll to the current search match.
   useEffect(() => {
-    if (current < 0) return;
-    const ts = meeting.transcript[matches[current]].timestamp;
-    listRef.current?.querySelector<HTMLElement>(`[data-ts="${ts}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (current >= 0) scrollToLine(listRef.current, meeting.transcript[matches[current]].timestamp);
   }, [current, matches, meeting.transcript]);
 
   // Ctrl/Cmd+F focuses transcript search first; pressing it again falls through to the browser.
@@ -146,7 +142,7 @@ export function Transcript({ meeting, seek, onSeek, onReveal, className }: Props
         )}
       </div>
 
-      <ol ref={listRef} className="scroll-thin flex-1 space-y-0.5 px-2 py-3 xl:overflow-y-auto" aria-label="Transcript">
+      <ol ref={listRef} className="scroll-thin relative flex-1 space-y-0.5 px-2 py-3 xl:overflow-y-auto" aria-label="Transcript">
         {meeting.transcript.map((entry, i) => (
           <Line
             key={entry.timestamp}
@@ -161,6 +157,21 @@ export function Transcript({ meeting, seek, onSeek, onReveal, className }: Props
       </ol>
     </div>
   );
+}
+
+/**
+ * Centres a line. In the desktop rail the list scrolls on its own, so only the list
+ * moves (the page stays put); inline on smaller screens the page scrolls instead.
+ */
+function scrollToLine(list: HTMLOListElement | null, timestamp: number) {
+  const el = list?.querySelector<HTMLElement>(`[data-ts="${timestamp}"]`);
+  if (!list || !el) return;
+  const ownScroll = getComputedStyle(list).overflowY === "auto" && list.scrollHeight > list.clientHeight;
+  if (ownScroll) {
+    list.scrollTo({ top: el.offsetTop - list.clientHeight / 2 + el.offsetHeight / 2, behavior: "smooth" });
+  } else {
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
 }
 
 const Line = memo(function Line({

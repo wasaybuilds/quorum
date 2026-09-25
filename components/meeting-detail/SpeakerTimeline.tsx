@@ -2,8 +2,10 @@
 
 import { useMemo } from "react";
 import type { Meeting } from "@/lib/types";
-import { formatTimestamp, speakerBarColor } from "@/lib/utils/format";
+import { formatTimestamp } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
+
+const SPEAKER_COLORS = ["bg-blue-500", "bg-amber-400", "bg-emerald-500", "bg-rose-400", "bg-teal-500", "bg-slate-500", "bg-orange-400"];
 
 /**
  * Who spoke when, across the whole call. Each segment runs from a transcript
@@ -19,6 +21,11 @@ export function SpeakerTimeline({
   onSeek: (t: number) => void;
 }) {
   const total = meeting.duration * 60;
+  // Colour by participant order so speakers in one meeting never share a colour.
+  const colorOf = useMemo(() => {
+    const map = new Map(meeting.participants.map((p, i) => [p.name, SPEAKER_COLORS[i % SPEAKER_COLORS.length]]));
+    return (name: string) => map.get(name) ?? "bg-slate-300";
+  }, [meeting.participants]);
 
   const { segments, talk } = useMemo(() => {
     const t = meeting.transcript;
@@ -54,7 +61,7 @@ export function SpeakerTimeline({
               style={{ width: `${((s.end - s.start) / total) * 100}%` }}
               className={cn(
                 "h-full border-r border-white/70 opacity-80 transition-opacity last:border-r-0 hover:opacity-100",
-                speakerBarColor(s.speaker),
+                colorOf(s.speaker),
                 active && "opacity-100 ring-2 ring-inset ring-foreground",
               )}
             />
@@ -64,7 +71,7 @@ export function SpeakerTimeline({
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
         {talk.map((p) => (
           <li key={p.name} className="flex items-center gap-1.5 text-xs text-muted">
-            <span className={cn("h-2 w-2 rounded-full", speakerBarColor(p.name))} />
+            <span className={cn("h-2 w-2 rounded-full", colorOf(p.name))} />
             <span className="text-foreground">{p.name}</span>
             <span className="tabular-nums">{p.pct}%</span>
           </li>

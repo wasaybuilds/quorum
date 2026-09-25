@@ -114,7 +114,7 @@ export function MeetingList({ meetings }: { meetings: Meeting[] }) {
           }
         />
       ) : (
-        <div className="mt-2 grid gap-3">
+        <div className="mt-2 grid grid-cols-1 gap-3">
           {filtered.map((m) => (
             <MeetingCard key={m.id} meeting={m} />
           ))}

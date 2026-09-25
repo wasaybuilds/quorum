@@ -78,7 +78,7 @@ export function SearchResults({ meetings }: { meetings: Meeting[] }) {
               <h2 className="mb-3 text-sm font-semibold text-foreground">
                 Meetings <span className="font-normal text-muted">{results.meetings.length}</span>
               </h2>
-              <div className="grid gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {results.meetings.map(({ meeting }) => (
                   <MeetingCard key={meeting.id} meeting={meeting} showSummary={false} />
                 ))}
