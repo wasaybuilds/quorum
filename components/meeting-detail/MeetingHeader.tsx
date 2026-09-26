@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Check, ChevronLeft, Link2 } from "lucide-react";
+import { BarChart3, Check, ChevronLeft, Link2 } from "lucide-react";
 import type { Meeting } from "@/lib/types";
 import { formatDate, formatDuration, formatTime } from "@/lib/utils/format";
 import { btn, size } from "@/lib/ui";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils/cn";
 import { TypeBadge } from "@/components/common/TypeBadge";
 import { Avatar } from "@/components/common/Avatar";
 
-export function MeetingHeader({ meeting }: { meeting: Meeting }) {
+export function MeetingHeader({ meeting, onOpenInsights }: { meeting: Meeting; onOpenInsights: () => void }) {
   const [copied, setCopied] = useState(false);
 
   async function copyLink() {
@@ -53,10 +53,17 @@ export function MeetingHeader({ meeting }: { meeting: Meeting }) {
             ))}
           </ul>
         </div>
-        <button type="button" onClick={copyLink} className={cn(btn.secondary, size.sm, "shrink-0")} aria-label="Copy link to this meeting">
+        <div className="flex shrink-0 gap-2">
+        <button type="button" onClick={onOpenInsights} className={cn(btn.primary, size.sm)}>
+          <BarChart3 className="h-4 w-4" aria-hidden="true" />
+          <span className="hidden sm:inline">Meeting insights</span>
+          <span className="sm:hidden">Insights</span>
+        </button>
+        <button type="button" onClick={copyLink} className={cn(btn.secondary, size.sm)} aria-label="Copy link to this meeting">
           {copied ? <Check className="h-4 w-4 text-success" aria-hidden="true" /> : <Link2 className="h-4 w-4" aria-hidden="true" />}
           <span className="hidden sm:inline">{copied ? "Link copied" : "Copy link"}</span>
         </button>
+        </div>
       </div>
     </header>
   );

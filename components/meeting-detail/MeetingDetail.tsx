@@ -15,6 +15,7 @@ import { SpeakerTimeline } from "./SpeakerTimeline";
 import { Summary, type SummaryOrigin } from "./Summary";
 import { ActionItems } from "./ActionItems";
 import { Transcript, type SeekRequest } from "./Transcript";
+import { MeetingInsights } from "./MeetingInsights";
 
 /** Right-column tabs on desktop (xl+). */
 type Panel = "summary" | "actions" | "ask";
@@ -42,6 +43,7 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
   const [panel, setPanel] = useState<Panel>("summary");
   const [view, setView] = useState<Exclude<MobileTab, "ask">>("summary");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
   const [seek, setSeek] = useState<SeekRequest | null>(null);
   const [hoverSpeaker, setHoverSpeaker] = useState<string | null>(null);
   const [pinnedSpeaker, setPinnedSpeaker] = useState<string | null>(null);
@@ -135,7 +137,7 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
 
       {/* Header: fixed row on xl, scrolls away below xl */}
       <div className="border-b border-border bg-surface px-4 pb-6 pt-4 sm:px-6 xl:shrink-0 xl:pb-5 xl:pt-3">
-        <MeetingHeader meeting={meeting} />
+        <MeetingHeader meeting={meeting} onOpenInsights={() => setInsightsOpen(true)} />
         <div className="mt-6 xl:hidden">{timeline}</div>
       </div>
 
@@ -214,6 +216,12 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
           </div>
         </aside>
       </div>
+
+      <AnimatePresence>
+        {insightsOpen && (
+          <MeetingInsights meeting={meeting} summary={summary} anchors={anchors} onSeek={seekFromUi} onClose={() => setInsightsOpen(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Below xl: Ask AI bottom sheet */}
       <AnimatePresence>
