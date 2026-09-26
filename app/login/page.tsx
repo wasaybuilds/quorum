@@ -69,8 +69,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
           </a>
         </div>
 
-        <div className="flex flex-1 items-center px-6 py-10 sm:px-10 lg:px-16 xl:px-24">
-          <div className="w-full max-w-[440px]">
+        <div className="flex flex-1 items-center justify-center px-6 py-10 sm:px-10">
+          <div className="w-full max-w-[420px]">
             <p className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-copy">
               <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" /> Welcome back
             </p>
