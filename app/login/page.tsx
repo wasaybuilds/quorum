@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { CalendarCheck2, FileText, MessageSquareText } from "lucide-react";
 import { LogoMark } from "@/components/layout/Logo";
+import { LoginShowcase } from "@/components/auth/LoginShowcase";
 import { GoogleLogo } from "@/components/upcoming/GoogleLogo";
 import { safeNext } from "@/lib/calendar/google";
 
@@ -13,11 +13,6 @@ const ERRORS: Record<string, string> = {
   unavailable: "Google sign-in isn't set up on this deployment. You can still explore the demo workspace.",
 };
 
-const FEATURES = [
-  { icon: FileText, title: "Notes you can trust", text: "Summaries, decisions and concerns linked to the exact moment they were said." },
-  { icon: MessageSquareText, title: "Ask across every call", text: "Find patterns and commitments across your whole meeting history." },
-  { icon: CalendarCheck2, title: "Follows your calendar", text: "Choose which meetings get recorded, automatically or one by one." },
-];
 
 export default async function LoginPage(props: PageProps<"/login">) {
   const params = await props.searchParams;
@@ -26,29 +21,33 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <div className="grid min-h-screen bg-[#111827] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      {/* Brand panel */}
-      <section className="hidden flex-col justify-between p-12 text-white lg:flex">
-        <div className="flex items-center gap-2.5">
+      {/* Brand panel with product showcase */}
+      <section className="relative hidden flex-col overflow-hidden p-12 text-white lg:flex">
+        <svg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.06]" aria-hidden="true">
+          <defs>
+            <pattern id="login-dots" width="22" height="22" patternUnits="userSpaceOnUse">
+              <circle cx="1.5" cy="1.5" r="1.5" fill="currentColor" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#login-dots)" />
+        </svg>
+        <div className="pointer-events-none absolute -right-24 top-1/3 h-72 w-72 rounded-full border border-[#2dd4bf]/15" aria-hidden="true" />
+        <div className="pointer-events-none absolute -right-8 top-[42%] h-40 w-40 rounded-full border border-[#2dd4bf]/10" aria-hidden="true" />
+
+        <div className="relative flex items-center gap-2.5">
           <LogoMark tone="dark" className="h-8 w-8" />
           <span className="text-[18px] font-semibold tracking-tight">Quorum</span>
         </div>
-        <div className="max-w-md">
-          <h2 className="text-[36px] font-semibold leading-tight text-white">Turn every meeting into decisions and next steps.</h2>
-          <ul className="mt-10 space-y-6">
-            {FEATURES.map(({ icon: Icon, title, text }) => (
-              <li key={title} className="flex gap-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#2dd4bf] ring-1 ring-white/10">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <p className="text-body font-semibold text-white">{title}</p>
-                  <p className="mt-0.5 text-small text-gray-400">{text}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+
+        <div className="relative flex flex-1 items-center">
+          <LoginShowcase />
         </div>
-        <p className="text-label text-gray-500">Quorum · meeting intelligence</p>
+
+        <div className="relative flex flex-wrap items-center gap-x-6 gap-y-2 text-label text-gray-400">
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#2dd4bf]" /> AI summaries with sources</span>
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#2dd4bf]" /> Google Calendar sync</span>
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#2dd4bf]" /> Read-only access</span>
+        </div>
       </section>
 
       {/* Sign-in card */}
