@@ -12,6 +12,7 @@ const SLIDES = [
     title: "Notes you can trust",
     text: "Summaries, decisions and risks, each linked to the exact moment it was said.",
     preview: <SummaryPreview />,
+    chip: { label: "Decision captured", meta: "16:14" },
   },
   {
     icon: MessageSquareText,
@@ -19,6 +20,7 @@ const SLIDES = [
     title: "Ask across every call",
     text: "Spot patterns and find commitments across your whole meeting history.",
     preview: <AskPreview />,
+    chip: { label: "8 sources cited", meta: "3 meetings" },
   },
   {
     icon: CalendarCheck2,
@@ -26,6 +28,7 @@ const SLIDES = [
     title: "Follows your calendar",
     text: "Pick which meetings get recorded, automatically or one by one.",
     preview: <CalendarPreview />,
+    chip: { label: "Auto-record on", meta: "external calls" },
   },
 ];
 
@@ -47,7 +50,7 @@ export function LoginShowcase() {
 
   return (
     <div
-      className="w-full max-w-[480px]"
+      className="mx-auto w-full max-w-[540px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -55,7 +58,9 @@ export function LoginShowcase() {
       aria-roledescription="carousel"
       aria-label="What Quorum does"
     >
-      <div className="relative h-[300px]">
+      <div className="relative h-[320px]">
+        {/* Layered card behind the preview for depth */}
+        <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-xl border border-white/10 bg-white/[0.04]" aria-hidden="true" />
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
@@ -68,6 +73,14 @@ export function LoginShowcase() {
             aria-label={`${index + 1} of ${SLIDES.length}: ${slide.title}`}
           >
             {slide.preview}
+            {/* Floating status chip */}
+            <div className="absolute -right-4 -top-5 flex items-center gap-2 rounded-full border border-white/10 bg-[#262626] py-1.5 pl-1.5 pr-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.7)]">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#155eef] text-white">
+                <slide.icon className="h-3.5 w-3.5" aria-hidden="true" />
+              </span>
+              <span className="text-[12px] font-semibold text-white">{slide.chip.label}</span>
+              <span className="font-mono text-[11px] text-gray-400">{slide.chip.meta}</span>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
