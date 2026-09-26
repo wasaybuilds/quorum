@@ -10,23 +10,23 @@ import type { CalendarState } from "./useCalendar";
 const ACCESS = [
   { icon: Eye, text: "Read-only: event titles, times, attendees and meeting links" },
   { icon: ShieldCheck, text: "Quorum never creates, edits or deletes events" },
-  { icon: Lock, text: "Access token is encrypted and stored only in your browser" },
+  { icon: Lock, text: "Tokens are encrypted at rest and can be revoked any time" },
 ];
 
 /** Google-style sign-in button (white, grey outline, "G" mark), per Google's branding guidance. */
-function GoogleButton({ disabled }: { disabled?: boolean }) {
+function GoogleButton({ disabled, label }: { disabled?: boolean; label: string }) {
   const cls =
     "inline-flex h-11 items-center justify-center gap-3 rounded-md border border-[#747775] bg-white px-4 text-[14px] font-medium text-[#1f1f1f] transition-colors duration-150 hover:bg-[#f8f9fa] focus-visible:outline-2 focus-visible:outline-offset-2";
   if (disabled) {
     return (
       <span className={cn(cls, "cursor-not-allowed border-border-strong text-muted opacity-60")} aria-disabled="true">
-        <GoogleLogo /> Connect Google Calendar
+        <GoogleLogo /> {label}
       </span>
     );
   }
   return (
     <a href="/api/calendar/connect" className={cls}>
-      <GoogleLogo /> Connect Google Calendar
+      <GoogleLogo /> {label}
     </a>
   );
 }
@@ -77,7 +77,11 @@ export function CalendarConnection({
               </p>
             ) : (
               <p className="mt-0.5 text-small text-muted">
-                {cal.configured ? "Sign in with Google to sync your next two weeks of meetings." : "Not available on this deployment yet."}
+                {!cal.configured
+                  ? "Not available on this deployment yet."
+                  : cal.signedIn
+                    ? "Grant read-only access to sync your next two weeks of meetings."
+                    : "You're in the demo workspace. Sign in with Google to see your real meetings."}
               </p>
             )}
           </div>
@@ -92,7 +96,7 @@ export function CalendarConnection({
                 </button>
               </>
             ) : (
-              <GoogleButton disabled={!cal.configured} />
+              <GoogleButton disabled={!cal.configured} label={cal.signedIn ? "Connect Google Calendar" : "Sign in with Google"} />
             )}
           </div>
         </div>
@@ -120,7 +124,7 @@ export function CalendarConnection({
         )}
         {!cal.configured && !cal.loading && (
           <p className="mt-4 rounded-md bg-surface-muted px-3 py-2 text-label text-muted">
-            Admin: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server to enable sign-in. See the README.
+            Admin: set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and DATABASE_URL on the server to enable sign-in. See the README.
           </p>
         )}
       </div>

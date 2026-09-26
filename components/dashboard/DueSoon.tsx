@@ -6,18 +6,17 @@ import { isOverdue, type OpenActionRow } from "@/lib/data/meetings";
 import { card, link } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
 import { Checkbox } from "@/components/common/Checkbox";
+import { useActionStatus } from "@/components/auth/ActionStatusProvider";
 
 const PREVIEW = 5;
 
-/** Open action items, soonest due first. Ticking is session-only (no persistence). */
+/** Open action items, soonest due first. Ticks are saved to the account when signed in. */
 export function DueSoon({ rows: initial }: { rows: OpenActionRow[] }) {
-  const [rows, setRows] = useState(initial);
+  const { statusOf, toggle: toggleStatus } = useActionStatus();
+  const rows = initial.map((r) => ({ ...r, status: statusOf(r.key, r.status) }));
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? rows : rows.slice(0, PREVIEW);
   const open = rows.filter((r) => r.status === "pending").length;
-
-  const toggle = (key: string) =>
-    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, status: r.status === "completed" ? "pending" : "completed" } : r)));
 
   return (
     <section aria-labelledby="due-heading" className={cn(card, "overflow-hidden")}>
@@ -40,7 +39,7 @@ export function DueSoon({ rows: initial }: { rows: OpenActionRow[] }) {
               )}
             >
               <div className="pt-0.5">
-                <Checkbox checked={done} onToggle={() => toggle(r.key)} label={r.task} />
+                <Checkbox checked={done} onToggle={() => toggleStatus(r.key, r.status)} label={r.task} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className={cn("line-clamp-2 text-body text-copy", done && "text-muted line-through")}>{r.task}</p>

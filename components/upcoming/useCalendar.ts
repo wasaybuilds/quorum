@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { UpcomingMeeting } from "@/lib/types";
+import { useSession } from "@/components/auth/SessionProvider";
 
 export interface CalendarState {
   loading: boolean;
   configured: boolean;
+  signedIn?: boolean;
   connected: boolean;
   email?: string;
   error?: boolean;
@@ -40,7 +42,8 @@ export function useCalendar() {
   return { ...state, reload: load, disconnect };
 }
 
-// --- recording preferences (per browser; no accounts in this demo) ----------
+// --- recording preferences --------------------------------------------------
+// Signed in: saved to the account (/api/me/preferences). Demo: this browser only.
 
 export interface RecordingPrefs {
   external: boolean;
@@ -52,7 +55,7 @@ export interface RecordingPrefs {
 const DEFAULT_PREFS: RecordingPrefs = { external: true, internal: false, shareWithAttendees: false, overrides: {} };
 const KEY = "quorum.recording-prefs";
 
-function read(): RecordingPrefs {
+function readLocal(): RecordingPrefs {
   try {
     const raw = localStorage.getItem(KEY);
     return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
@@ -62,25 +65,49 @@ function read(): RecordingPrefs {
 }
 
 export function useRecordingPrefs() {
+  const { user, loading } = useSession();
   const [prefs, setPrefs] = useState<RecordingPrefs>(DEFAULT_PREFS);
 
   useEffect(() => {
-    // Hydrate from localStorage after mount so server and client render the same defaults.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPrefs(read());
-  }, []);
+    if (loading) return;
+    if (!user) {
+      // Hydrate from localStorage after mount so server and client render the same defaults.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPrefs(readLocal());
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/me/preferences", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => !cancelled && data && setPrefs({ ...DEFAULT_PREFS, ...data }))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user, loading]);
 
-  const update = useCallback((patch: Partial<RecordingPrefs>) => {
-    setPrefs((p) => {
-      const next = { ...p, ...patch };
-      try {
-        localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {
-        // storage unavailable (private mode); keep in memory only
-      }
-      return next;
-    });
-  }, []);
+  const update = useCallback(
+    (patch: Partial<RecordingPrefs>) => {
+      setPrefs((p) => {
+        const next = { ...p, ...patch };
+        if (user) {
+          void fetch("/api/me/preferences", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(next),
+          });
+        } else {
+          try {
+            localStorage.setItem(KEY, JSON.stringify(next));
+          } catch {
+            // storage unavailable (private mode); keep in memory only
+          }
+        }
+        return next;
+      });
+    },
+    [user],
+  );
 
   const willRecord = useCallback(
     (m: UpcomingMeeting) => prefs.overrides[m.id] ?? (m.external ? prefs.external : prefs.internal),
@@ -92,5 +119,5 @@ export function useRecordingPrefs() {
     [prefs.overrides, update],
   );
 
-  return { prefs, update, willRecord, setRecord };
+  return { prefs, update, willRecord, setRecord, persisted: !!user };
 }

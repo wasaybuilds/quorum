@@ -47,7 +47,8 @@ npm run dev                  # http://localhost:3000
 | `ANTHROPIC_API_KEY` | No | Enables live summaries and answers. Server-side only. |
 | `ANTHROPIC_MODEL` | No | Overrides the default model. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No | Enables "Connect Google Calendar" on the Upcoming page. |
-| `CALENDAR_COOKIE_SECRET` | No | Key for the encrypted calendar token cookie (defaults to one derived from the client secret). |
+| `DATABASE_URL` | For accounts | Postgres connection string. Enables sign-in and per-user saved data. |
+| `AUTH_SECRET` | For accounts | Encryption key for Google tokens stored in the database. |
 
 Production build: `npm run build && npm start` (respects `PORT`).
 
@@ -103,19 +104,28 @@ lib/
 **Deliberately out of scope:**
 - **Recording and transcription.** No bot joins calls; meetings come from the seed library.
 - **Video playback.** The timeline and timestamps navigate the transcript rather than a video.
-- **Calendar-driven recording.** Google Calendar connects for real (read-only), but no bot joins the meetings, and record toggles and preferences are saved in the browser only.
-- **Authentication.** A single demo workspace; no login.
-- **Persistence.** Ticking off an action item or regenerating a summary lasts for the session only.
+- **Calendar-driven recording.** Your real Google Calendar is read and record preferences are saved, but no bot joins the meetings.
+- **Shared workspaces.** Every account sees the same seed meeting library; teams, sharing and per-user recordings are not modelled.
 - **CRM / Slack / Asana sync, clip sharing, custom summary templates, coaching metrics.**
+
+## Accounts and data
+
+Sign-in is **Google OAuth** (OpenID Connect), done in-house in `lib/calendar/google.ts` and `app/api/auth/*`. One consent screen both identifies the user and grants read-only calendar access.
+
+- **Sessions:** a random token in an httpOnly cookie; the database stores only its SHA-256 hash (30-day expiry). Sign-out deletes the row.
+- **Google tokens:** encrypted with AES-256-GCM (`AUTH_SECRET`) before they're written; refreshed automatically; **Disconnect** deletes them and revokes the grant at Google.
+- **Per-user data (Postgres):** users, sessions, Google tokens, recording preferences and per-meeting record toggles, and action-item completion. Tables are created automatically on first use (`lib/db/index.ts`).
+- **Demo workspace:** "Explore the demo workspace" on the login page skips sign-in for evaluators; changes then last only for the visit.
+- **Gate:** `proxy.ts` sends visitors without a session or demo cookie to `/login`; every API route re-checks the session server-side.
 
 ## Google Calendar setup (optional)
 
 1. In Google Cloud Console, enable the **Google Calendar API** and create an **OAuth client ID** of type *Web application*.
 2. Add `https://<your-domain>/api/calendar/callback` (and `http://localhost:3000/api/calendar/callback` for local use) as an authorised redirect URI.
 3. On the OAuth consent screen, add the `calendar.readonly` scope. While the app is in *Testing*, add each Google account that should connect as a test user; others will see Google's "unverified app" screen.
-4. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` and restart.
+4. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `DATABASE_URL` and `AUTH_SECRET`, then restart.
 
-Tokens are kept in an encrypted, httpOnly cookie on the user's browser; nothing is stored on the server. **Disconnect** clears it.
+The same OAuth client powers sign-in; the callback path `/api/calendar/callback` is the only redirect URI needed.
 
 ## Deployment
 

@@ -10,13 +10,15 @@ import { Checkbox } from "@/components/common/Checkbox";
 import { EmptyState } from "@/components/common/States";
 import { Select } from "@/components/common/Select";
 import { StatusBadge } from "@/components/common/TypeBadge";
+import { useActionStatus } from "@/components/auth/ActionStatusProvider";
 
 type Status = "open" | "overdue" | "completed" | "all";
 type Sort = "due" | "owner" | "meeting";
 
-/** Every action item across meetings. Ticking is session-only (no persistence). */
+/** Every action item across meetings. Ticks are saved to the account when signed in. */
 export function ActionsTable({ rows: initial }: { rows: OpenActionRow[] }) {
-  const [rows, setRows] = useState(initial);
+  const { statusOf, toggle: toggleStatus } = useActionStatus();
+  const rows = useMemo(() => initial.map((r) => ({ ...r, status: statusOf(r.key, r.status) })), [initial, statusOf]);
   const [status, setStatus] = useState<Status>("open");
   const [owner, setOwner] = useState("all");
   const [sort, setSort] = useState<Sort>("due");
@@ -40,8 +42,6 @@ export function ActionsTable({ rows: initial }: { rows: OpenActionRow[] }) {
     );
   }, [rows, status, owner, sort]);
 
-  const toggle = (key: string) =>
-    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, status: r.status === "completed" ? "pending" : "completed" } : r)));
 
   const counts = {
     open: rows.filter((r) => r.status === "pending").length,
@@ -128,7 +128,7 @@ export function ActionsTable({ rows: initial }: { rows: OpenActionRow[] }) {
                     )}
                   >
                     <td className="pt-0.5 md:py-3 md:pl-5 md:align-top">
-                      <Checkbox checked={done} onToggle={() => toggle(r.key)} label={r.task} />
+                      <Checkbox checked={done} onToggle={() => toggleStatus(r.key, r.status)} label={r.task} />
                     </td>
                     <td className="min-w-0 flex-1 md:py-3 md:pr-4 md:align-top">
                       <span className={cn("text-copy", done && "text-muted line-through")}>{r.task}</span>

@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/common/Checkbox";
 import { EmptyState } from "@/components/common/States";
 import { Select } from "@/components/common/Select";
 import { StatusBadge } from "@/components/common/TypeBadge";
+import { useActionStatus } from "@/components/auth/ActionStatusProvider";
 
 type SortKey = "due" | "owner" | "priority" | "task";
 type Filter = "all" | "pending" | "completed";
@@ -18,15 +19,22 @@ const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
 export function ActionItems({
   items: initial,
+  keyPrefix,
   stickyClassName,
   className,
 }: {
   items: ActionItem[];
+  /** status keys are `${keyPrefix}-${index}`, shared with the Home and Action items lists */
+  keyPrefix: string;
   /** sticky offset for the header row, which depends on the surrounding layout */
   stickyClassName?: string;
   className?: string;
 }) {
-  const [items, setItems] = useState(() => initial.map((item, id) => ({ ...item, id })));
+  const { statusOf, toggle: toggleStatus } = useActionStatus();
+  const items = useMemo(
+    () => initial.map((item, id) => ({ ...item, id, status: statusOf(`${keyPrefix}-${id}`, item.status) })),
+    [initial, keyPrefix, statusOf],
+  );
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortKey>("due");
 
@@ -49,8 +57,7 @@ export function ActionItems({
     });
   }, [items, filter, sort]);
 
-  const toggle = (id: number) =>
-    setItems((list) => list.map((i) => (i.id === id ? { ...i, status: i.status === "completed" ? "pending" : "completed" } : i)));
+  const toggle = (id: number, current: ActionItem["status"]) => toggleStatus(`${keyPrefix}-${id}`, current);
 
   return (
     <section aria-labelledby="actions-heading" className={className}>
@@ -110,7 +117,7 @@ export function ActionItems({
                 )}
               >
                 <div className="pt-0.5">
-                  <Checkbox checked={completed} onToggle={() => toggle(item.id)} label={item.task} />
+                  <Checkbox checked={completed} onToggle={() => toggle(item.id, item.status)} label={item.task} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className={cn("text-body text-copy", completed && "text-muted line-through")}>{item.task}</p>

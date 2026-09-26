@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
+import { LogIn, LogOut } from "lucide-react";
 import { initials } from "@/lib/utils/format";
+import { useSession } from "@/components/auth/SessionProvider";
 import { LogoMark } from "./Logo";
 import { NAV_ITEMS, isActive } from "./nav";
 
@@ -52,20 +54,63 @@ export function Sidebar({ collapsed, onNavigate, className }: { collapsed: boole
         })}
       </nav>
 
-      <div className={cn("mt-auto flex items-center gap-3 pt-4", collapsed ? "justify-center" : "border-t border-white/10 px-2 pt-4")}>
-        <span
-          title="Abdul Wasay · Lattice Labs"
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0f766e] text-label font-semibold text-white ring-2 ring-white/10"
-        >
-          {initials("Abdul Wasay")}
-        </span>
-        {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate text-body font-medium text-white">Abdul Wasay</p>
-            <p className="truncate text-label text-gray-400">Lattice Labs · Demo</p>
-          </div>
+      <AccountSection collapsed={collapsed} />
+    </aside>
+  );
+}
+
+function AccountSection({ collapsed }: { collapsed: boolean }) {
+  const { user, demo, loading, signOut } = useSession();
+  const name = user ? user.name || user.email : "Demo workspace";
+  const sub = user ? user.email : demo ? "Sample data · not saved" : "";
+  const avatar = (
+    <span
+      title={user ? `${name} · ${user.email}` : name}
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0f766e] text-label font-semibold text-white ring-2 ring-white/10"
+    >
+      {user ? initials(name) : "D"}
+    </span>
+  );
+  const actionCls =
+    "flex h-9 items-center justify-center gap-2 rounded-md text-label font-medium text-gray-300 transition-colors duration-150 hover:bg-white/5 hover:text-white";
+
+  if (loading) return <div className="mt-auto h-9" />;
+
+  if (collapsed) {
+    return (
+      <div className="mt-auto flex flex-col items-center gap-2 pt-4">
+        {avatar}
+        {user ? (
+          <button type="button" onClick={signOut} className={cn(actionCls, "w-9")} title="Sign out" aria-label="Sign out">
+            <LogOut className="h-4 w-4" />
+          </button>
+        ) : (
+          <a href="/login" className={cn(actionCls, "w-9")} title="Sign in" aria-label="Sign in">
+            <LogIn className="h-4 w-4" />
+          </a>
         )}
       </div>
-    </aside>
+    );
+  }
+
+  return (
+    <div className="mt-auto border-t border-white/10 px-2 pt-4">
+      <div className="flex items-center gap-3">
+        {avatar}
+        <div className="min-w-0">
+          <p className="truncate text-body font-medium text-white">{name}</p>
+          <p className="truncate text-label text-gray-400">{sub}</p>
+        </div>
+      </div>
+      {user ? (
+        <button type="button" onClick={signOut} className={cn(actionCls, "mt-3 w-full border border-white/10")}>
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
+      ) : (
+        <a href="/login" className={cn(actionCls, "mt-3 w-full bg-white/10 text-white hover:bg-white/15")}>
+          <LogIn className="h-4 w-4" /> Sign in with Google
+        </a>
+      )}
+    </div>
   );
 }

@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { AskPanel } from "@/components/ask/AskPanel";
+import { SessionProvider } from "@/components/auth/SessionProvider";
+import { ActionStatusProvider } from "@/components/auth/ActionStatusProvider";
 import { ShellProvider, useShell } from "./ShellContext";
 import { Sidebar } from "./Sidebar";
 import { PanelHeader } from "./PanelHeader";
@@ -15,11 +17,14 @@ import { hasOwnAsk } from "./nav";
  *   rounded panel. The panel's header is fixed; `main` is the one scroll area.
  *   The Ask Quorum panel opens as a right-hand column on xl+.
  * - below lg: dark sticky top bar with a slide-out menu; the window scrolls.
+ * - /login renders on its own, without the app chrome.
  */
 function Frame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { collapsed, askOpen } = useShell();
   const panel = askOpen && !hasOwnAsk(pathname);
+
+  if (pathname === "/login") return <>{children}</>;
 
   return (
     <div className="min-h-screen bg-[#111827] lg:flex lg:h-dvh lg:overflow-hidden">
@@ -41,8 +46,12 @@ function Frame({ children }: { children: React.ReactNode }) {
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
   return (
-    <ShellProvider>
-      <Frame>{children}</Frame>
-    </ShellProvider>
+    <SessionProvider>
+      <ActionStatusProvider>
+        <ShellProvider>
+          <Frame>{children}</Frame>
+        </ShellProvider>
+      </ActionStatusProvider>
+    </SessionProvider>
   );
 }

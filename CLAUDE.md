@@ -100,6 +100,13 @@ AI meeting intelligence workspace. Transform conversations into summaries, decis
 - Page background #F3F4F6 with white cards; scrollbars hidden globally.
 - Google Calendar: `lib/calendar/google.ts` (OAuth, AES-GCM token cookie, Calendar API mapping) + `app/api/calendar/*`. No keys → demo calendar (`lib/calendar/demo.ts`). Recording preferences/toggles persist in localStorage (per-viewer convenience).
 
+## Shell v4 + accounts
+- Layout: dark frame, collapsible sidebar (`components/layout/Sidebar.tsx`, state in `ShellContext`, localStorage), content in an inset rounded panel with `PanelHeader`; `main` is the scroll area on lg+. Ask Quorum panel toggled from the header (xl+). Page grids use container queries (`@container` on main).
+- Auth: in-house Google OIDC. `/api/auth/google` → Google → `/api/calendar/callback` (the one registered redirect URI) → upsert user, store AES-GCM-encrypted tokens, create session (cookie token, SHA-256 hash in DB). `/api/auth/demo` sets a demo cookie; `/api/auth/logout`; `/api/me`.
+- DB: Railway Postgres via `postgres` (porsager). Schema auto-created in `lib/db/index.ts`. App uses the private URL on Railway; local dev uses the TCP proxy URL in `.env.local`.
+- Per-user persistence: `/api/me/preferences` (recording prefs + overrides), `/api/me/actions` (action item status, keys `<meetingId>-<index>`), shared client store `ActionStatusProvider`.
+- `proxy.ts`: optimistic cookie gate to /login; APIs verify sessions themselves.
+
 ## Commit Rules
 - NEVER mention "Claude" in commits, README, or code
 - Commit `.agent-logs/` as you go, not in lump

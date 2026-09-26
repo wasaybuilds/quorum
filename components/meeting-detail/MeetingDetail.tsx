@@ -196,7 +196,13 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
               stickyClassName={STICKY}
               className={show("summary", "summary")}
             />
-            <ActionItems key={summaryVersion} items={summary.action_items} stickyClassName={STICKY} className={show("actions", "actions")} />
+            <ActionItems
+              key={summaryVersion}
+              items={summary.action_items}
+              keyPrefix={summaryVersion === 0 ? meeting.id : `${meeting.id}-v${summaryVersion}`}
+              stickyClassName={STICKY}
+              className={show("actions", "actions")}
+            />
             <div className={cn("hidden pt-6", panel === "ask" && "xl:block")}>
               <ChatMessages {...messagesProps} />
             </div>
