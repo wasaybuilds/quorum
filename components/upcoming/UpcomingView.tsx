@@ -2,15 +2,16 @@
 
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, CalendarX, Check, ExternalLink, Info, RefreshCw, Video } from "lucide-react";
+import { CalendarDays, CalendarX, Check, ExternalLink, Info, Video } from "lucide-react";
 import type { UpcomingMeeting } from "@/lib/types";
-import { btn, card, link, size } from "@/lib/ui";
+import { card, link } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
 import { AvatarStack } from "@/components/common/Avatar";
 import { EmptyState, Loading } from "@/components/common/States";
 import { StatusBadge } from "@/components/common/TypeBadge";
 import { Toggle } from "@/components/common/Toggle";
 import { useCalendar, useRecordingPrefs } from "./useCalendar";
+import { CalendarConnection } from "./CalendarConnection";
 
 // Demo events are Pacific-time fixtures; real events show in the viewer's own time zone.
 const zoneFor = (m: UpcomingMeeting) => (m.source === "demo" ? "America/Los_Angeles" : undefined);
@@ -67,50 +68,8 @@ export function UpcomingView() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Calendar connection */}
-        <section aria-labelledby="cal-heading" className={cn(card, "p-5 lg:p-6")}>
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-ink">
-              <CalendarDays className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <h2 id="cal-heading" className="text-h3">
-                Calendar
-              </h2>
-              <p className="mt-1 text-small text-muted">
-                {cal.loading
-                  ? "Checking your connection…"
-                  : cal.connected
-                    ? `Connected to Google Calendar as ${cal.email ?? "your account"}. Read-only access.`
-                    : "Showing a demo calendar. Connect Google Calendar to see your real meetings (read-only)."}
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {cal.connected ? (
-              <>
-                <button type="button" onClick={cal.reload} className={cn(btn.secondary, size.md)}>
-                  <RefreshCw className="h-4 w-4" aria-hidden="true" /> Refresh
-                </button>
-                <button type="button" onClick={cal.disconnect} className={cn(btn.secondary, size.md)}>
-                  Disconnect
-                </button>
-              </>
-            ) : cal.configured ? (
-              <a href="/api/calendar/connect" className={cn(btn.primary, size.md)}>
-                Connect Google Calendar
-              </a>
-            ) : (
-              <>
-                <button type="button" disabled className={cn(btn.primary, size.md)}>
-                  Connect Google Calendar
-                </button>
-                <p className="w-full text-label text-muted">Needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server. See the README.</p>
-              </>
-            )}
-          </div>
-        </section>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <CalendarConnection cal={cal} onRefresh={cal.reload} onDisconnect={cal.disconnect} />
 
         {/* Meeting preferences */}
         <section aria-labelledby="prefs-heading" className={cn(card, "p-5 lg:p-6")}>
