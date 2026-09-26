@@ -31,7 +31,7 @@ export function MobileHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 bg-[#111827] px-2 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 bg-[#1c1c1c] px-2 lg:hidden">
         <button type="button" onClick={() => setOpen(true)} className={ICON_BTN} aria-label="Open menu" aria-expanded={open}>
           <Menu className="h-5 w-5" />
         </button>

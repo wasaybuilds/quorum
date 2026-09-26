@@ -12,7 +12,7 @@ import { btn, card, size } from "@/lib/ui";
 import { cn } from "@/lib/utils/cn";
 
 // Sequential teal ramp for topic intensity (light → dark), neutral for zero.
-const HEAT = ["#f3f4f6", "#ccfbf1", "#5eead4", "#14b8a6", "#0f766e"];
+const HEAT = ["#f3f4f6", "#d1e0ff", "#84adff", "#528bff", "#155eef"];
 const heat = (n: number, max: number) => (n === 0 ? HEAT[0] : HEAT[Math.min(4, Math.max(1, Math.ceil((n / max) * 4)))]);
 
 type Moment = { t: number; kind: "decision" | "concern" | "highlight"; label: string };
@@ -395,7 +395,7 @@ function SegmentBar({
 }
 
 function MomentGlyph({ kind }: { kind: Moment["kind"] }) {
-  if (kind === "decision") return <span className="block h-2.5 w-2.5 rotate-45 rounded-[2px] bg-[#0f766e]" aria-hidden="true" />;
+  if (kind === "decision") return <span className="block h-2.5 w-2.5 rotate-45 rounded-[2px] bg-[#155eef]" aria-hidden="true" />;
   if (kind === "concern") return <AlertTriangle className="h-3.5 w-3.5 fill-amber-100 text-amber-600" aria-hidden="true" />;
   return <Flag className="h-3.5 w-3.5 text-muted" aria-hidden="true" />;
 }

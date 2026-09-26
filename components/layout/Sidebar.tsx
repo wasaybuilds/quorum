@@ -20,7 +20,7 @@ export function Sidebar({ collapsed, onNavigate, className }: { collapsed: boole
     <aside
       aria-label="Sidebar"
       className={cn(
-        "flex shrink-0 flex-col bg-[#111827] py-4 transition-[width] duration-150 ease-in-out",
+        "flex shrink-0 flex-col bg-[#1c1c1c] py-4 transition-[width] duration-150 ease-in-out",
         collapsed ? "w-16 items-center px-2" : "w-60 px-3",
         className,
       )}
@@ -44,7 +44,7 @@ export function Sidebar({ collapsed, onNavigate, className }: { collapsed: boole
               className={cn(
                 "flex h-11 items-center gap-3 rounded-lg text-body transition-colors duration-150",
                 collapsed ? "w-11 justify-center" : "px-3",
-                active ? "bg-[#0d9488] font-medium text-white" : "text-gray-400 hover:bg-white/5 hover:text-white",
+                active ? "bg-[#155eef] font-medium text-white" : "text-gray-400 hover:bg-white/5 hover:text-white",
               )}
             >
               <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
@@ -66,7 +66,7 @@ function AccountSection({ collapsed }: { collapsed: boolean }) {
   const avatar = (
     <span
       title={user ? `${name} · ${user.email}` : name}
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0f766e] text-label font-semibold text-white ring-2 ring-white/10"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#155eef] text-label font-semibold text-white ring-2 ring-white/10"
     >
       {user ? initials(name) : "D"}
     </span>

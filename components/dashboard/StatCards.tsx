@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils/cn";
 export function StatCards() {
   const s = getStats();
   const tiles = [
-    { label: "Meetings this week", value: String(s.meetingsThisWeek), sub: `of ${s.totalMeetings} recorded`, icon: Video, tone: "bg-[#0d9488]" },
-    { label: "Time recorded", value: formatDuration(s.totalMinutes), sub: `${s.participants} people`, icon: Clock, tone: "bg-[#3b82f6]" },
+    { label: "Meetings this week", value: String(s.meetingsThisWeek), sub: `of ${s.totalMeetings} recorded`, icon: Video, tone: "bg-[#2970ff]" },
+    { label: "Time recorded", value: formatDuration(s.totalMinutes), sub: `${s.participants} people`, icon: Clock, tone: "bg-[#1c1c1c]" },
     { label: "Decisions captured", value: String(s.decisions), sub: `across ${s.totalMeetings} meetings`, icon: CheckCircle2, tone: "bg-[#10b981]" },
     { label: "Open action items", value: String(s.openActionItems), sub: s.overdue ? `${s.overdue} overdue` : "none overdue", icon: ListChecks, tone: "bg-[#f59e0b]", warn: s.overdue > 0 },
   ];

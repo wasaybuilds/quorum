@@ -2,30 +2,31 @@
 
 /* ---------------------------------------------------------------------------
    Design tokens
-   Accent note: #0D9488 is used for non-text accents (borders, focus, icons,
-   large stat figures). Text links and filled buttons use #0F766E so white-on-
-   teal and teal-on-white text meet WCAG AA at 14px.
+   Accent: royal blue. #155eef is the text/button blue (5.4:1 with white, AA at
+   14px); #2970ff is for non-text accents (borders, focus, icons, big figures);
+   #528bff is the accent on the charcoal (#1c1c1c) frame. Muted text (#646b76)
+   clears 4.5:1 on both white and the page grey.
    ------------------------------------------------------------------------ */
 :root {
   color-scheme: light;
 
-  --ink: #1f2937;
-  --body: #374151;
-  --muted: #6b7280;
+  --ink: #171717;
+  --body: #3f3f46;
+  --muted: #646b76;
   --placeholder: #9ca3af;
   --disabled: #d1d5db;
 
-  --page: #f3f4f6;
+  --page: #f4f4f5;
   --surface: #ffffff;
-  --surface-muted: #f9fafb;
-  --surface-disabled: #f3f4f6;
-  --border: #e5e7eb;
-  --border-strong: #d1d5db;
+  --surface-muted: #fafafa;
+  --surface-disabled: #f1f1f3;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
 
-  --accent: #0d9488;
-  --accent-ink: #0f766e;
-  --accent-hover: #115e59;
-  --accent-soft: #ccfbf1;
+  --accent: #2970ff;
+  --accent-ink: #155eef;
+  --accent-hover: #004eeb;
+  --accent-soft: #e0eaff;
 
   --success: #10b981;
   --danger: #ef4444;
@@ -58,7 +59,7 @@
   --color-info: var(--info);
   --color-highlight: var(--highlight);
 
-  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* Type scale: size / line-height / weight applied per class */
@@ -100,7 +101,8 @@
   h2,
   h3 {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   ::placeholder {
@@ -128,7 +130,7 @@
 .field:focus-within,
 .field:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  box-shadow: 0 0 0 3px rgba(41, 112, 255, 0.18);
   outline: none;
 }
 

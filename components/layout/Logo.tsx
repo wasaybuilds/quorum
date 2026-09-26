@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils/cn";
 export function LogoMark({ className = "h-5 w-5", tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   return (
     <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
-      <rect width="20" height="20" rx="5" fill={tone === "dark" ? "#0f766e" : "#1f2937"} />
+      <rect width="20" height="20" rx="5" fill={tone === "dark" ? "#155eef" : "#1f2937"} />
       <circle cx="9.4" cy="9.4" r="4.4" fill="none" stroke="#fff" strokeWidth="1.7" />
-      <path d="M12 12.1 15 15.1" stroke={tone === "dark" ? "#ccfbf1" : "#2dd4bf"} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 12.1 15 15.1" stroke={tone === "dark" ? "#d1e0ff" : "#528bff"} strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

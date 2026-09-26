@@ -73,10 +73,10 @@ export function LoginShowcase() {
       </div>
 
       <div className="mt-8 min-h-[112px]" aria-live="polite">
-        <p className="flex items-center gap-2 text-label font-medium text-[#2dd4bf]">
-          <slide.icon className="h-4 w-4" aria-hidden="true" /> {slide.eyebrow}
+        <p className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-gray-200">
+          <slide.icon className="h-3.5 w-3.5 text-[#528bff]" aria-hidden="true" /> {slide.eyebrow}
         </p>
-        <h2 className="mt-2 text-[30px] font-semibold leading-tight text-white">{slide.title}</h2>
+        <h2 className="mt-3 text-[34px] font-extrabold leading-[1.1] tracking-tight text-white">{slide.title}</h2>
         <p className="mt-2 max-w-md text-body text-gray-400">{slide.text}</p>
       </div>
 
@@ -91,7 +91,7 @@ export function LoginShowcase() {
             onClick={() => setIndex(i)}
             className="group flex h-6 items-center"
           >
-            <span className={cn("block h-1.5 rounded-full transition-all duration-300", i === index ? "w-8 bg-[#2dd4bf]" : "w-3 bg-white/20 group-hover:bg-white/40")} />
+            <span className={cn("block h-1.5 rounded-full transition-all duration-300", i === index ? "w-8 bg-[#528bff]" : "w-3 bg-white/20 group-hover:bg-white/40")} />
           </button>
         ))}
       </div>
@@ -121,10 +121,10 @@ function SummaryPreview() {
       <p className="text-[13px] font-semibold text-ink">Acme Product Demo</p>
       <p className="text-[11px] text-muted">Acme Corporation · 30 min · Zoom</p>
       <div className="mt-3 flex h-6 gap-0.5 overflow-hidden rounded">
-        <span className="basis-[36%] bg-[#0f766e]" />
-        <span className="basis-[32%] bg-[#0d9488]" />
-        <span className="basis-[21%] bg-[#5eead4]" />
-        <span className="basis-[11%] bg-[#99f6e4]" />
+        <span className="basis-[36%] bg-[#2a78d6]" />
+        <span className="basis-[32%] bg-[#eda100]" />
+        <span className="basis-[21%] bg-[#eb6834]" />
+        <span className="basis-[11%] bg-[#1baf7a]" />
       </div>
       <p className="mt-3 text-[11px] font-medium text-muted">Decisions</p>
       <ul className="mt-1.5 space-y-1.5">

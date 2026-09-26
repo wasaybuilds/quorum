@@ -19,9 +19,9 @@ export function AskCard() {
   const [q, setQ] = useState("");
 
   return (
-    <section aria-labelledby="askcard-heading" className="rounded-lg bg-[#111827] p-5 text-white lg:p-6">
+    <section aria-labelledby="askcard-heading" className="rounded-lg bg-[#1c1c1c] p-5 text-white lg:p-6">
       <div className="flex items-center gap-2">
-        <MessageSquareText className="h-4 w-4 text-[#2dd4bf]" aria-hidden="true" />
+        <MessageSquareText className="h-4 w-4 text-[#528bff]" aria-hidden="true" />
         <h2 id="askcard-heading" className="text-h3 text-white">
           Ask Quorum
         </h2>
@@ -40,12 +40,12 @@ export function AskCard() {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Ask a question about your meetings..."
           aria-label="Ask a question about your meetings"
-          className="h-10 min-w-0 flex-1 rounded-md border border-white/15 bg-white/5 px-3 text-[16px] text-white outline-none transition-colors duration-150 placeholder:text-gray-500 focus:border-[#2dd4bf] sm:text-body"
+          className="h-10 min-w-0 flex-1 rounded-md border border-white/15 bg-white/5 px-3 text-[16px] text-white outline-none transition-colors duration-150 placeholder:text-gray-500 focus:border-[#528bff] sm:text-body"
         />
         <button
           type="submit"
           disabled={!q.trim()}
-          className="inline-flex h-10 items-center rounded-md bg-[#0d9488] px-4 text-body font-medium text-white transition-colors duration-150 hover:bg-[#0f766e] disabled:bg-white/10 disabled:text-gray-500"
+          className="inline-flex h-10 items-center rounded-md bg-[#155eef] px-4 text-body font-medium text-white transition-colors duration-150 hover:bg-[#004eeb] disabled:bg-white/10 disabled:text-gray-500"
         >
           Ask
         </button>
@@ -59,7 +59,7 @@ export function AskCard() {
               className="group -mx-2 flex min-h-11 items-center justify-between gap-3 rounded-md px-2 text-small text-gray-300 transition-colors duration-150 hover:bg-white/5 hover:text-white"
             >
               {e}
-              <ArrowRight className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-[#2dd4bf]" aria-hidden="true" />
+              <ArrowRight className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-[#528bff]" aria-hidden="true" />
             </Link>
           </li>
         ))}

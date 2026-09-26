@@ -20,7 +20,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const next = safeNext(typeof params.next === "string" ? params.next : "/");
 
   return (
-    <div className="grid min-h-screen bg-[#111827] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid min-h-screen bg-[#1c1c1c] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       {/* Brand panel with product showcase */}
       <section className="relative hidden flex-col overflow-hidden p-12 text-white lg:flex">
         <svg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.06]" aria-hidden="true">
@@ -31,8 +31,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
           </defs>
           <rect width="100%" height="100%" fill="url(#login-dots)" />
         </svg>
-        <div className="pointer-events-none absolute -right-24 top-1/3 h-72 w-72 rounded-full border border-[#2dd4bf]/15" aria-hidden="true" />
-        <div className="pointer-events-none absolute -right-8 top-[42%] h-40 w-40 rounded-full border border-[#2dd4bf]/10" aria-hidden="true" />
+        <div className="pointer-events-none absolute -right-24 top-1/3 h-72 w-72 rounded-full border border-[#528bff]/15" aria-hidden="true" />
+        <div className="pointer-events-none absolute -right-8 top-[42%] h-40 w-40 rounded-full border border-[#528bff]/10" aria-hidden="true" />
 
         <div className="relative flex items-center gap-2.5">
           <LogoMark tone="dark" className="h-8 w-8" />
@@ -44,9 +44,9 @@ export default async function LoginPage(props: PageProps<"/login">) {
         </div>
 
         <div className="relative flex flex-wrap items-center gap-x-6 gap-y-2 text-label text-gray-400">
-          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#2dd4bf]" /> AI summaries with sources</span>
-          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#2dd4bf]" /> Google Calendar sync</span>
-          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#2dd4bf]" /> Read-only access</span>
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#528bff]" /> AI summaries with sources</span>
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#528bff]" /> Google Calendar sync</span>
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#528bff]" /> Read-only access</span>
         </div>
       </section>
 

@@ -27,7 +27,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   if (pathname === "/login") return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[#111827] lg:flex lg:h-dvh lg:overflow-hidden">
+    <div className="min-h-screen bg-[#1c1c1c] lg:flex lg:h-dvh lg:overflow-hidden">
       <Sidebar collapsed={collapsed} className="hidden lg:flex" />
       <MobileHeader />
       <div className="flex min-h-[calc(100dvh-3.5rem)] min-w-0 flex-1 flex-col bg-page lg:my-2.5 lg:mr-2.5 lg:min-h-0 lg:overflow-hidden lg:rounded-xl">

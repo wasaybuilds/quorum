@@ -107,6 +107,12 @@ AI meeting intelligence workspace. Transform conversations into summaries, decis
 - Per-user persistence: `/api/me/preferences` (recording prefs + overrides), `/api/me/actions` (action item status, keys `<meetingId>-<index>`), shared client store `ActionStatusProvider`.
 - `proxy.ts`: optimistic cookie gate to /login; APIs verify sessions themselves.
 
+## Theme v5 (royal blue + charcoal)
+- Accent blue: #155eef text/buttons (5.4:1 with white), #2970ff non-text accents, #528bff on the charcoal frame; hover #004eeb; soft #e0eaff.
+- Neutrals: ink #171717, body #3f3f46, muted #646b76 (≥4.5:1 on white and on page #f4f4f5), charcoal frame #1c1c1c.
+- Font: Plus Jakarta Sans (400–800), headings 700 with -0.02em tracking; JetBrains Mono for timestamps and pill labels.
+- Meeting types: sales blue, CS green, internal amber, engineering slate (#64748b). Speakers use the validated categorical palette in `lib/utils/speakers.ts`.
+
 ## Commit Rules
 - NEVER mention "Claude" in commits, README, or code
 - Commit `.agent-logs/` as you go, not in lump

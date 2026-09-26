@@ -60,19 +60,19 @@ export const TYPE_LABELS: Record<MeetingType, string> = {
   engineering: "Engineering",
 };
 
-/** Type colour: used only for the badge dot and the list row's left border. */
+/** Type colour: used only for the badge dot and the list row's left border (sales takes the brand blue). */
 export const TYPE_DOT: Record<MeetingType, string> = {
   sales: "bg-accent",
   cs: "bg-success",
   internal: "bg-warning",
-  engineering: "bg-info",
+  engineering: "bg-[#64748b]",
 };
 
 export const TYPE_BORDER: Record<MeetingType, string> = {
   sales: "border-l-accent",
   cs: "border-l-success",
   internal: "border-l-warning",
-  engineering: "border-l-info",
+  engineering: "border-l-[#64748b]",
 };
 
 export function pluralize(n: number, word: string, plural = `${word}s`): string {
