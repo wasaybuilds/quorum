@@ -72,3 +72,18 @@ export interface AskResponse {
   /** true when the answer came from the offline fallback rather than the model */
   fallback?: boolean;
 }
+
+/** A calendar event Quorum could join and record. */
+export interface UpcomingMeeting {
+  id: string;
+  title: string;
+  /** ISO 8601 */
+  start: string;
+  end: string;
+  attendees: { name?: string; email: string }[];
+  platform: Meeting["platform"] | null;
+  /** has attendees from outside the organiser's domain */
+  external: boolean;
+  joinUrl?: string;
+  source: "demo" | "google";
+}

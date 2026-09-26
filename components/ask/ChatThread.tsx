@@ -22,6 +22,8 @@ export function ChatMessages({
   onSeek,
   suggestions,
   empty,
+  showMeeting = false,
+  loadingText = "Reading the transcript…",
   className,
 }: {
   messages: ChatMessage[];
@@ -31,6 +33,9 @@ export function ChatMessages({
   onSeek?: (timestamp: number) => void;
   suggestions: string[];
   empty: React.ReactNode;
+  /** cross-meeting answers: name the meeting in each source */
+  showMeeting?: boolean;
+  loadingText?: string;
   className?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -76,7 +81,7 @@ export function ChatMessages({
             {m.response && m.response.sources.length > 0 && (
               <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
                 {m.response.sources.map((s) => (
-                  <SourceLink key={`${s.meetingId}-${s.timestamp}`} source={s} onSeek={onSeek} />
+                  <SourceLink key={`${s.meetingId}-${s.timestamp}`} source={s} onSeek={onSeek} showMeeting={showMeeting} />
                 ))}
               </p>
             )}
@@ -97,7 +102,7 @@ export function ChatMessages({
           </div>
         ),
       )}
-      {loading && <Loading message="Reading the transcript…" className="py-2" />}
+      {loading && <Loading message={loadingText} className="py-2" />}
     </div>
   );
 }

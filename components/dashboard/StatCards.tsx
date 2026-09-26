@@ -20,7 +20,7 @@ export function StatCards() {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {tiles.map(({ label, value, sub, icon: Icon, warn }) => (
         <div key={label} className={cn(card, "p-4 sm:p-5 lg:p-6")}>
           <div className="flex items-center justify-between">

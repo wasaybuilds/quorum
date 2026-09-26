@@ -1,12 +1,16 @@
-import { LayoutDashboard, MessageSquareText, Search, Video } from "lucide-react";
-
 export const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/meetings", label: "Meetings", icon: Video },
-  { href: "/ask", label: "Ask Quorum", icon: MessageSquareText },
-  { href: "/search", label: "Search", icon: Search },
+  { href: "/", label: "Home" },
+  { href: "/meetings", label: "Meetings" },
+  { href: "/upcoming", label: "Upcoming" },
+  { href: "/actions", label: "Action items" },
+  { href: "/ask", label: "Ask Quorum" },
 ] as const;
 
 export function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Pages that bring their own Ask surface, so the global panel steps aside. */
+export function hasOwnAsk(pathname: string) {
+  return pathname.startsWith("/meetings/") || pathname === "/ask";
 }

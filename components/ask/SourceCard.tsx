@@ -8,13 +8,16 @@ import { cn } from "@/lib/utils/cn";
 export function SourceLink({
   source,
   onSeek,
+  showMeeting = false,
   className,
 }: {
   source: MeetingSource;
   onSeek?: (timestamp: number) => void;
+  /** prefix the meeting title (cross-meeting answers) */
+  showMeeting?: boolean;
   className?: string;
 }) {
-  const label = `[${source.speaker} @ ${formatTimestamp(source.timestamp)}]`;
+  const label = `[${showMeeting ? `${source.meetingTitle} · ` : ""}${source.speaker} @ ${formatTimestamp(source.timestamp)}]`;
   const cls = cn(link, "text-body", className);
   const title = `“${source.text}”`;
   return onSeek ? (

@@ -10,7 +10,10 @@ Quorum is a rebuild of the core of [Fathom](https://fathom.video), scoped to the
 
 | | |
 |---|---|
-| **Dashboard** | Recent meetings, library stats (meetings, time recorded, decisions, open action items), upcoming calls, your open action items and one-click questions. |
+| **Home** | Library stats, the next meetings on your calendar with auto-record toggles, recent meetings, action items due soon and where meeting time goes. |
+| **Upcoming** | Your calendar for the next two weeks. Connect Google Calendar (read-only) or use the demo calendar; set meeting preferences (auto-record external / internal) and toggle recording per meeting. |
+| **Action items** | Every follow-up across meetings, filterable by status and owner, with overdue items flagged. |
+| **Ask Quorum panel** | Always available on the right (desktop), like Ask Fathom: ask across all meetings or a scope, and the conversation follows you between pages. |
 | **Meetings** | Filter by title, company or participant; narrow by type (Sales, Customer Success, Internal, Engineering); sort by date or length. |
 | **Meeting detail** | Header with participants and platform · conversation timeline with talk-time per speaker · summary with key points, decisions and concerns (each linked to its source line) · sortable, filterable action items you can tick off · timestamped transcript with in-transcript search (`Ctrl/⌘+F`), highlights and click-to-jump. |
 | **Ask AI (one meeting)** | Chat in a side panel (bottom sheet on mobile). Answers come with cited transcript lines and a confidence level; clicking a source scrolls the transcript to that line. |
@@ -43,6 +46,8 @@ npm run dev                  # http://localhost:3000
 |---|---|---|
 | `ANTHROPIC_API_KEY` | No | Enables live summaries and answers. Server-side only. |
 | `ANTHROPIC_MODEL` | No | Overrides the default model. |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No | Enables "Connect Google Calendar" on the Upcoming page. |
+| `CALENDAR_COOKIE_SECRET` | No | Key for the encrypted calendar token cookie (defaults to one derived from the client secret). |
 
 Production build: `npm run build && npm start` (respects `PORT`).
 
@@ -98,10 +103,19 @@ lib/
 **Deliberately out of scope:**
 - **Recording and transcription.** No bot joins calls; meetings come from the seed library.
 - **Video playback.** The timeline and timestamps navigate the transcript rather than a video.
-- **Calendar sync.** "Upcoming" is a fixed list.
+- **Calendar-driven recording.** Google Calendar connects for real (read-only), but no bot joins the meetings, and record toggles and preferences are saved in the browser only.
 - **Authentication.** A single demo workspace; no login.
 - **Persistence.** Ticking off an action item or regenerating a summary lasts for the session only.
 - **CRM / Slack / Asana sync, clip sharing, custom summary templates, coaching metrics.**
+
+## Google Calendar setup (optional)
+
+1. In Google Cloud Console, enable the **Google Calendar API** and create an **OAuth client ID** of type *Web application*.
+2. Add `https://<your-domain>/api/calendar/callback` (and `http://localhost:3000/api/calendar/callback` for local use) as an authorised redirect URI.
+3. On the OAuth consent screen, add the `calendar.readonly` scope. While the app is in *Testing*, add each Google account that should connect as a test user; others will see Google's "unverified app" screen.
+4. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` and restart.
+
+Tokens are kept in an encrypted, httpOnly cookie on the user's browser; nothing is stored on the server. **Disconnect** clears it.
 
 ## Deployment
 

@@ -79,3 +79,10 @@ export function openActionRows(list: Meeting[] = meetings, limit = 8): OpenActio
     .sort((a, b) => (parseDue(a.dueDate)?.getTime() ?? Infinity) - (parseDue(b.dueDate)?.getTime() ?? Infinity))
     .slice(0, limit);
 }
+
+/** Every action item in the library (open and completed). */
+export function allActionRows(list: Meeting[] = meetings): OpenActionRow[] {
+  return list.flatMap((m) =>
+    m.summary.action_items.map((a, i) => ({ ...a, key: `${m.id}-${i}`, meeting: { id: m.id, title: m.title } })),
+  );
+}

@@ -94,6 +94,12 @@ AI meeting intelligence workspace. Transform conversations into summaries, decis
 - Dashboard: hero, two stats (meetings this week, decisions), 8 recent meetings as plain cards, open action items (5 rows + View all, sortable), quick Ask box. Shared `TabBar` (components/common) used on meeting detail and Ask Quorum scopes.
 - "This week" and "overdue" are computed against `DEMO_TODAY` (Sep 25, 2026) in `lib/data/meetings.ts` so static pages stay stable over time.
 
+## Shell v3 (Fathom-style)
+- Dark top bar (`components/layout/TopBar.tsx`): logo, global search, account; tabs Home / Meetings / Upcoming / Action items / Ask Quorum. Whole bar sticky from lg (112px); on phones only the 56px top row sticks.
+- `AppFrame` renders the persistent Ask Quorum panel (`components/ask/AskPanel.tsx`) on xl+ except on pages with their own Ask (`/meetings/[id]`, `/ask`); it stays mounted so the conversation survives navigation.
+- Page background #F3F4F6 with white cards; scrollbars hidden globally.
+- Google Calendar: `lib/calendar/google.ts` (OAuth, AES-GCM token cookie, Calendar API mapping) + `app/api/calendar/*`. No keys → demo calendar (`lib/calendar/demo.ts`). Recording preferences/toggles persist in localStorage (per-viewer convenience).
+
 ## Commit Rules
 - NEVER mention "Claude" in commits, README, or code
 - Commit `.agent-logs/` as you go, not in lump

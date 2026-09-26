@@ -30,13 +30,13 @@ const SUGGESTIONS: Record<Meeting["type"], string[]> = {
 
 /*
  * Scrolling model
- * - xl+: the page is exactly one viewport tall. The header row is fixed; the left
+ * - xl+: the page fills the viewport under the app bar. The header row is fixed; the left
  *   column (talk time + transcript) and the right column (tab content) each have
  *   exactly one scroll area. The Ask AI input is docked under the right column.
  * - below xl: only the window scrolls. The tab bar and each section's toolbar are
  *   sticky; Ask AI opens as a 60dvh bottom sheet.
  */
-const STICKY = "top-[104px] lg:top-12 xl:top-0"; // 56px mobile nav + 48px tab bar; tab bar only on lg; own scroll area on xl
+const STICKY = "top-[104px] lg:top-40 xl:top-0"; // below tab bar: 56px app bar + 48px tabs on phones, 112px + 48px on lg; xl columns scroll on their own
 
 export function MeetingDetail({ meeting }: { meeting: Meeting }) {
   const [panel, setPanel] = useState<Panel>("summary");
@@ -128,7 +128,7 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
   );
 
   return (
-    <div className="xl:flex xl:h-dvh xl:flex-col">
+    <div className="xl:flex xl:h-[calc(100dvh-7rem)] xl:flex-col">
       <Suspense fallback={null}>
         <SeekFromUrl onSeek={onSeek} />
       </Suspense>
@@ -143,7 +143,7 @@ export function MeetingDetail({ meeting }: { meeting: Meeting }) {
       <TabBar
         label="Meeting sections"
         fill
-        className="sticky top-14 z-20 px-2 sm:px-4 lg:top-0 xl:hidden"
+        className="sticky top-14 z-20 px-2 sm:px-4 lg:top-28 xl:hidden"
         active={sheetOpen ? "ask" : view}
         onChange={(id) => (id === "ask" ? setSheetOpen(true) : setView(id))}
         tabs={[
