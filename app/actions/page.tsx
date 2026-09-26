@@ -10,7 +10,7 @@ export default function ActionsPage() {
   return (
     <div className={container}>
       <PageHeader title="Action items" description="Every follow-up committed to on a call, and who owns it." />
-      <div className="mt-8">
+      <div className="mt-5">
         <ActionsTable rows={allActionRows()} />
       </div>
     </div>

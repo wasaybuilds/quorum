@@ -30,5 +30,5 @@ export const cardInteractive = `${card} transition-colors duration-150 hover:bor
 
 export const link = "text-accent-ink hover:text-accent-hover hover:underline underline-offset-2";
 
-/** Page content wrapper: 1160px max, 16 / 24 / 32px gutters, 32px vertical. */
-export const container = "mx-auto w-full max-w-[1160px] px-4 py-8 sm:px-6 lg:px-8";
+/** Page content wrapper inside the panel: 16px gutters on phones, 24px from sm. */
+export const container = "mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6 sm:py-6";

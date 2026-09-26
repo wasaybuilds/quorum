@@ -10,7 +10,7 @@ export default function MeetingsPage() {
   return (
     <div className={container}>
       <PageHeader title="All meetings" description="Every recorded call, with notes, action items and a searchable transcript." />
-      <div className="mt-8">
+      <div className="mt-5">
         <MeetingList meetings={meetings} />
       </div>
     </div>

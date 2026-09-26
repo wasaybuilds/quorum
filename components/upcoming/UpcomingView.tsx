@@ -68,7 +68,7 @@ export function UpcomingView() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 items-start gap-5 @4xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <CalendarConnection cal={cal} onRefresh={cal.reload} onDisconnect={cal.disconnect} />
 
         {/* Meeting preferences */}

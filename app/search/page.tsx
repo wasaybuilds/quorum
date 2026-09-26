@@ -12,7 +12,7 @@ export default function SearchPage() {
   return (
     <div className={container}>
       <PageHeader title="Search" description="Find any meeting, person, or moment across every transcript." />
-      <div className="mt-8">
+      <div className="mt-5">
         <Suspense fallback={<Loading message="Loading search…" />}>
           <SearchResults meetings={meetings} />
         </Suspense>

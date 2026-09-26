@@ -11,7 +11,7 @@ export default function UpcomingPage() {
   return (
     <div className={container}>
       <PageHeader title="Upcoming" description="Quorum joins and takes notes for the meetings you choose." />
-      <div className="mt-8">
+      <div className="mt-5">
         <Suspense fallback={<Loading message="Loading your calendar…" />}>
           <UpcomingView />
         </Suspense>
